@@ -7,12 +7,14 @@ const unsigned int TIMES_HALL_READ = 10;
 const unsigned int DELAY_MS_HALL_READ = 100;
 const unsigned int THRESHOLD_HALL = 30;
 
-SensorBase* sensorKind = NULL;
+SensorBase* sensor = NULL;
 unsigned long millisStart;
 
 void initiateDeepSleepForReporting();
 bool checkHallForReset();
 void initSensor();
+void checkForReset();
+void readSettings();
 
 void setup()
 {
@@ -32,12 +34,7 @@ void setup()
     initSensor();
 
     // Check if settings should be reset
-    if (checkHallForReset())
-    {
-        Serial.println("Hall sensor threshold exceeded! Resetting settings...");
-        EspWifiSetup::resetSettings();
-        resetSettings();
-    }
+    checkForReset();
 
     Serial.println("Reading settings...");
     readSettings();
@@ -90,8 +87,38 @@ bool checkHallForReset()
     return (hallValueMean >= THRESHOLD_HALL);
 }
 
-void initSensor() {
-    // Read config
-    sensorKind
+void checkForReset() 
+{
+    if (checkHallForReset())
+    {
+        Serial.println("Hall sensor threshold exceeded! Resetting settings...");
+        EspWifiSetup::resetSettings();
+        resetSettings();
 
+        if (sensor) {
+            sensor->resetSettings();
+        }
+    }
+}
+
+void initSensor() 
+{
+    // Read config
+
+}
+
+void readSettings()
+{
+    Preferences prefs;
+    prefs.begin(PREFS_NAME, true);
+
+    settingName = prefs.getString(ID_NAME, getShortMac());
+    settingActivateReporting = prefs.getBool(ID_ACTIVATE_REPORTING, false);
+    settingEditAddress = prefs.getString(ID_EDIT_ADDRESS, "");
+    settingIntervalSecs = prefs.getUInt(ID_INTERVAL_SECS, 1800);
+    settingPassive = prefs.getBool(ID_PASSIVE, false);
+    settingReportBattery = prefs.getBool(ID_REPORT_BATTERY, false);
+    settingReportBatteryAddress = prefs.getString(ID_REPORT_BATTERY_ADDRESS, "");
+
+    prefs.end();
 }
