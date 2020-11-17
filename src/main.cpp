@@ -7,6 +7,14 @@ const unsigned int TIMES_HALL_READ = 10;
 const unsigned int DELAY_MS_HALL_READ = 100;
 const unsigned int THRESHOLD_HALL = 30;
 
+String settingSensorName;
+bool settingActivateReporting;
+String settingBaseAddress;
+unsigned int settingIntervalSecs;
+bool settingPassive;
+bool settingReportBattery;
+String settingReportBatteryAddressSuffix;
+
 SensorBase* sensor = NULL;
 unsigned long millisStart;
 
@@ -40,8 +48,9 @@ void setup()
     readSettings();
     Serial.println("Settings read!");
 
+    // Connecting to WiFi. If WiFI is not set up at all the WiFi setup is started
     Serial.println("Setting up wifi...");
-    if (!EspWifiSetup::setup(String("Thermometer-") + settingName, false, settingPassive) && settingPassive)
+    if (!EspWifiSetup::setup(String("Sensor-") + settingSensorName, false, settingPassive) && settingPassive)
     {
         initiateDeepSleepForReporting();
     }
@@ -104,7 +113,6 @@ void checkForReset()
 void initSensor() 
 {
     // Read config
-
 }
 
 void readSettings()
