@@ -3,21 +3,13 @@
 #include <SensorBase.h>
 #include <SensorMoisture.h>
 #include <SensorThermometer.h>
+#include <WebServerSensor.h>
+#include <Constants.h>
 
 const int PIN_BATTERY_MONITORING = 35;
 const unsigned int TIMES_HALL_READ = 10;
 const unsigned int DELAY_MS_HALL_READ = 100;
 const unsigned int THRESHOLD_HALL = 30;
-
-const char* GENERAL_PREFS_NAME = "general";
-const char* GENERAL_PREF_SENSOR_NAME = "name";
-const char* GENERAL_PREF_ACTIVATE_REPORTING = "activateRep";
-const char* GENERAL_PREF_BASE_ADDRESS = "baseAdd";
-const char* GENERAL_PREF_REPORTING_INTERVAL_SECS = "intervalSecs";
-const char* GENERAL_PREF_PASSIVE = "passive";
-const char* GENERAL_PREF_ACTIVATE_REPORTING_BAT = "activateRepBat";
-const char* GENERAL_PREF_BAT_REPORTING_ADDRESS = "batAdd";
-const char* GENERAL_PREF_SENSOR_TYPE = "sensorType";
 
 String settingSensorName;
 bool settingActivateReporting;
@@ -29,7 +21,9 @@ String settingReportBatteryAddress;
 SensorType settingSensorType;
 
 SensorBase* sensor = NULL;
+WebServerSensor* webServer = NULL;
 unsigned long millisStart;
+
 
 void initiateDeepSleepForReporting();
 bool checkHallForReset();
@@ -76,10 +70,13 @@ void setup()
     }
     Serial.println("WiFi successfully set up!");
 
+    sensor->begin();
+
     if (!settingPassive)
     {
         Serial.println("Setting up web server...");
-        setupWebServer();
+        webServer = new WebServerSensor(sensor);
+        webServer->startWebServer();
         Serial.println("Webserver set up!");
     }
     else

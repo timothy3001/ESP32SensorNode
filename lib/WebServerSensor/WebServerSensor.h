@@ -2,19 +2,27 @@
 #include <SensorBase.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <Constants.h>
+#include <ArduinoJson.h>
+#include <Preferences.h>
+
+const char* SENSOR_PREFS_NAME = "sensor";
 
 class WebServerSensor
 {
     public:
         WebServerSensor(SensorBase *sensor);
         ~WebServerSensor();
-        void startConfigurationServer();
-        void startNormalOperationServer();
+        void startWebServer();
 
     private:
         SensorBase *sensor = NULL;
         AsyncWebServer *webServer = NULL;
 
-        void handleRootPageSetting(AsyncWebServerRequest *request);
-        void handleRootPageNormalOperation(AsyncWebServerRequest *request);
+        void handleRootPage(AsyncWebServerRequest *request);
+        void handleSettingsPage(AsyncWebServerRequest *request);
+        void handleGetSettings(AsyncWebServerRequest *request);
+        void handleUpdateSettings(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
+        void handleGetValues(AsyncWebServerRequest *request);
+        void updateGeneralSettings(JsonObject generalSettingsObj);
 };

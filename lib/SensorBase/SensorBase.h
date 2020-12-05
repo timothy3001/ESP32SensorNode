@@ -1,9 +1,65 @@
 class SensorBase
 {
     public:
+        /**
+         * When called, all sesor specific settings should be resetted to the default. 
+         */
         virtual void resetSettings();
+
+        /**
+         * Called at startup. You can use it for initialization.
+         * Prefer to do initialization for reading out sensor values in this function
+         * and not in the constructor
+         */
         virtual void begin();
+
+        /**
+         * Called by the webserver to get the sensor specific HTML code for showing
+         * sensor values. The HTML code is embedded into a special DIV-Element on 
+         * the root page.
+         * 
+         * @return String that contains the sensor specific HTML code to be embedded.
+         */
         virtual String getSensorInformationHtml();
+
+        /**
+         * Called by the webserver to get the sensor specific HTML code for showing
+         * and manipulating settings. The HTML code is embedded into a special 
+         * DIV-Element on the settings page.
+         * 
+         * @return String that contains the sensor specific HTML code to be embedded.
+         */
         virtual String getConfigurationPageHtml();
-        virtual void updateSettings();
+
+        /**
+         * Called by the webserver when settings are updated. 
+         * 
+         * @param settings JSON string containing the settings object.
+         */
+        virtual void updateSettings(String settings);
+
+        /**
+         * Called by the webserver to retrieve the current sensor values. 
+         * These will call the javascript function 'updateValues(values)' to 
+         * display the current values. This function should be able to deliver 
+         * the values every second. Make sure, that you don't need too long to 
+         * get the new sensor value.
+         * 
+         * Data should be formatted as JSON.
+         * 
+         * @return JSON as String containing needed values.
+         */
+        virtual String getValues();
+
+        /**
+         * Called by the webserver to retrieve the current sensor specific settings. These can be
+         * used to display the current settings in the web view. The javascript 
+         * 'setCurrentSettings(settings)' will be called. If that function is
+         * implemented it will be given all current settings.
+         * 
+         * Data should be formatted as JSON.
+         * 
+         * @return JSON as String containing current sensor settings.
+         */ 
+        virtual String getSettings();
 };
