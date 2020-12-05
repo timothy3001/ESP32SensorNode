@@ -1,3 +1,6 @@
+#ifndef SensorMoisture_h_
+#define SensorMoisture_h_
+
 #include <SensorBase.h>
 
 class SensorMoisture : public SensorBase
@@ -7,3 +10,5 @@ class SensorMoisture : public SensorBase
         void begin();
         String getSensorInformationHtml();
 };
+
+#endif

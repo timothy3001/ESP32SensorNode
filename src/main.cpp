@@ -18,7 +18,7 @@ unsigned int settingIntervalSecs;
 bool settingPassive;
 bool settingReportBattery;
 String settingReportBatteryAddress;
-SensorType settingSensorType;
+SensorType settingSensorType = Thermometer;
 
 SensorBase* sensor = NULL;
 WebServerSensor* webServer = NULL;
@@ -29,11 +29,9 @@ void initiateDeepSleepForReporting();
 bool checkHallForReset();
 void initSensor();
 void checkForReset();
-void readSettings();
+void readGeneralPrefs();
 String getShortMac();
 void resetSettings();
-
-enum SensorType { Thermometer = 0, Moisture = 1 };
 
 void setup()
 {
@@ -50,18 +48,20 @@ void setup()
     millisStart = millis();
 
     // Read general prefs
+    Serial.println("Reading general prefs...");
     readGeneralPrefs();
+    Serial.println("General prefs read!");
 
     // Initialize sensor
+    Serial.println("Creating sensor type...");
     initSensor();
+    Serial.println("Sensor type created!");
 
     // Check if settings should be reset
+    Serial.println("Check if settings should be reset...");
     checkForReset();
-
-    Serial.println("Reading settings...");
-    readSettings();
-    Serial.println("Settings read!");
-
+    Serial.println("Check for settings reset done!");
+        
     // Connecting to WiFi. If WiFi is not set up at all the WiFi setup is started
     Serial.println("Setting up wifi...");
     if (!EspWifiSetup::setup(String("Sensor-") + settingSensorName, false, settingPassive) && settingPassive)
@@ -70,18 +70,33 @@ void setup()
     }
     Serial.println("WiFi successfully set up!");
 
-    sensor->begin();
-
-    if (!settingPassive)
+    if (settingSensorType == None)
     {
-        Serial.println("Setting up web server...");
+        Serial.println("Setting up web server for normal operation...");
         webServer = new WebServerSensor(sensor);
         webServer->startWebServer();
-        Serial.println("Webserver set up!");
+        Serial.println("Webserver set up for normal operation!");        
+    }
+    else if (settingPassive)
+    {
+        Serial.println("Passive mode active");
+
+        // Do battery reporting
+
+        // Call sensor reporting
+
+        // Go to sleep again
     }
     else
     {
-        Serial.println("Passive mode active");
+        Serial.println("Starting sensor...");
+        sensor->begin();
+        Serial.println("Sensor started!");
+
+        Serial.println("Setting up web server for normal operation...");
+        webServer = new WebServerSensor(sensor);
+        webServer->startWebServer();
+        Serial.println("Webserver set up for normal operation!");        
     }
 }
 

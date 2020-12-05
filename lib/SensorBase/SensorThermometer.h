@@ -1,3 +1,6 @@
+#ifndef SensorThermometer_h_
+#define SensorThermometer_h_
+
 #include <SensorBase.h>
 
 class SensorThermometer : public SensorBase
@@ -7,3 +10,5 @@ class SensorThermometer : public SensorBase
         void begin();
         String getSensorInformationHtml();
 };
+
+#endif

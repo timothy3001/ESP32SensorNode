@@ -1,3 +1,6 @@
+#ifndef WebServerSensor_h_
+#define WebServerSensor_h
+
 #include <Arduino.h>
 #include <SensorBase.h>
 #include <AsyncTCP.h>
@@ -5,8 +8,6 @@
 #include <Constants.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
-
-const char* SENSOR_PREFS_NAME = "sensor";
 
 class WebServerSensor
 {
@@ -26,3 +27,5 @@ class WebServerSensor
         void handleGetValues(AsyncWebServerRequest *request);
         void updateGeneralSettings(JsonObject generalSettingsObj);
 };
+
+#endif

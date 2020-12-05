@@ -1,3 +1,6 @@
+#ifndef SensorBase_h_
+#define SensorBase_h_
+
 class SensorBase
 {
     public:
@@ -63,3 +66,5 @@ class SensorBase
          */ 
         virtual String getSettings();
 };
+
+#endif
