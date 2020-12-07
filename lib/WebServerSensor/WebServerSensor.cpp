@@ -1,16 +1,26 @@
 #include <WebServerSensor.h>
 
-WebServerSensor::WebServerSensor(SensorBase *sensor)
+WebServerSensor::WebServerSensor(SensorBase *sensor, GeneralSettings *generalSettings)
 {
     this->sensor = sensor;
+    this->generalSettings = generalSettings;
 
     webServer = new AsyncWebServer(80);
     webServer->onNotFound([](AsyncWebServerRequest *request) { request->send(404, "text/plain", "Not found!"); });
 }
 
-void WebServerSensor::startWebServer()
+void WebServerSensor::startWebServer(bool onlySettings)
 {    
-    webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleRootPage(request); });
+    if (onlySettings)
+    {
+        webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleSettingsPage(request); });
+    }
+    else
+    {
+        webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleRootPage(request); });
+        webServer->on("/api/values", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleGetValues(request); });
+    }
+    
     webServer->on("/settings", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleSettingsPage(request); });
     webServer->on("/api/settings", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleGetSettings(request); });
     webServer->on("/api/settings", HTTP_POST, 
@@ -20,28 +30,43 @@ void WebServerSensor::startWebServer()
         { 
             this->handleUpdateSettings(request, data, len, index, total); 
         });
-    webServer->on("/api/values", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleGetValues(request); });
     webServer->begin();    
 }
 
 
 void WebServerSensor::handleRootPage(AsyncWebServerRequest *request)
 {
-    
+    request->send_P(200, "text/html", rootPage);
 }
 
 void WebServerSensor::handleSettingsPage(AsyncWebServerRequest *request)
 {
-
+    request->send_P(200, "text/html", settingsPage);
 }
 
 void WebServerSensor::handleGetSettings(AsyncWebServerRequest *request)
-{
-    String settingsSensorString = sensor->getSettings();
-    DynamicJsonDocument settingsSensorJson(1024);
+{    
+    DynamicJsonDocument settingsDoc(1024);
 
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_BASE_ADDRESS] = generalSettings->baseAddress;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_SENSOR_NAME] = generalSettings->sensorName;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_ACTIVATE_REPORTING] = generalSettings->reportingActive;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_ACTIVATE_REPORTING_BAT] = generalSettings->reportingBatteryActive;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_BAT_REPORTING_ADDRESS] = generalSettings->reportingBatteryAddress;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_REPORTING_INTERVAL_SECS] = generalSettings->intervalSeconds;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_PASSIVE] = generalSettings->passiveOperation;
+    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_SENSOR_TYPE] = (int)generalSettings->sensorType;
 
+    DynamicJsonDocument sensorSettingsDoc(1024);
+    String sensorSettingsJson = sensor->getSettings();
+    deserializeJson(sensorSettingsDoc, sensorSettingsJson);
 
+    settingsDoc[SENSOR_PREFS_NAME] = sensorSettingsDoc.to<JsonObject>();
+
+    String json;
+    serializeJson(settingsDoc, json);
+    
+    request->send(200, "application/json", json);
 }
 
 void WebServerSensor::handleUpdateSettings(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
@@ -73,28 +98,25 @@ void WebServerSensor::handleUpdateSettings(AsyncWebServerRequest *request, uint8
 }
 
 void WebServerSensor::updateGeneralSettings(JsonObject generalSettingsObj)
-{
-    Preferences prefs;
-    prefs.begin(GENERAL_PREFS_NAME, false);
-    
+{    
     if (generalSettingsObj.containsKey(GENERAL_PREF_SENSOR_NAME))
-        prefs.putString(GENERAL_PREF_SENSOR_NAME, generalSettingsObj[GENERAL_PREF_SENSOR_NAME].as<String>());
+        generalSettings->sensorName = generalSettingsObj[GENERAL_PREF_SENSOR_NAME].as<String>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_BASE_ADDRESS))
-        prefs.putString(GENERAL_PREF_BASE_ADDRESS, generalSettingsObj[GENERAL_PREF_BASE_ADDRESS].as<String>());
+        generalSettings->baseAddress = generalSettingsObj[GENERAL_PREF_BASE_ADDRESS].as<String>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_BAT_REPORTING_ADDRESS))
-        prefs.putString(GENERAL_PREF_BAT_REPORTING_ADDRESS, generalSettingsObj[GENERAL_PREF_BAT_REPORTING_ADDRESS].as<String>());
+        generalSettings->reportingBatteryAddress = generalSettingsObj[GENERAL_PREF_BAT_REPORTING_ADDRESS].as<String>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_ACTIVATE_REPORTING))
-        prefs.putBool(GENERAL_PREF_ACTIVATE_REPORTING, generalSettingsObj[GENERAL_PREF_ACTIVATE_REPORTING].as<bool>());
+        generalSettings->reportingActive = generalSettingsObj[GENERAL_PREF_ACTIVATE_REPORTING].as<bool>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_PASSIVE))
-        prefs.putBool(GENERAL_PREF_PASSIVE, generalSettingsObj[GENERAL_PREF_PASSIVE].as<bool>());
+        generalSettings->passiveOperation = generalSettingsObj[GENERAL_PREF_PASSIVE].as<bool>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_ACTIVATE_REPORTING_BAT))
-        prefs.putBool(GENERAL_PREF_ACTIVATE_REPORTING_BAT, generalSettingsObj[GENERAL_PREF_ACTIVATE_REPORTING_BAT].as<bool>());
+        generalSettings->reportingBatteryActive = generalSettingsObj[GENERAL_PREF_ACTIVATE_REPORTING_BAT].as<bool>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_REPORTING_INTERVAL_SECS))
-        prefs.putInt(GENERAL_PREF_REPORTING_INTERVAL_SECS, generalSettingsObj[GENERAL_PREF_REPORTING_INTERVAL_SECS].as<int>());
+        generalSettings->intervalSeconds = generalSettingsObj[GENERAL_PREF_REPORTING_INTERVAL_SECS].as<int>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_SENSOR_TYPE))
-        prefs.putInt(GENERAL_PREF_SENSOR_TYPE, generalSettingsObj[GENERAL_PREF_SENSOR_TYPE].as<int>());
+        generalSettings->sensorType = (SensorType)generalSettingsObj[GENERAL_PREF_SENSOR_TYPE].as<int>();
 
-    prefs.end();
+    generalSettings->save();
 }
 
 void WebServerSensor::handleGetValues(AsyncWebServerRequest *request)

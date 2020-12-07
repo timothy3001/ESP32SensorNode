@@ -1,10 +1,9 @@
 #include <Arduino.h>
 #include <EspWifiSetup.h>
 #include <SensorBase.h>
-#include <SensorMoisture.h>
-#include <SensorThermometer.h>
 #include <WebServerSensor.h>
 #include <Constants.h>
+#include <GeneralSettings.h>
 
 const int PIN_BATTERY_MONITORING = 35;
 const unsigned int TIMES_HALL_READ = 10;
@@ -22,16 +21,14 @@ SensorType settingSensorType = Thermometer;
 
 SensorBase* sensor = NULL;
 WebServerSensor* webServer = NULL;
+GeneralSettings* generalSettings = NULL;
 unsigned long millisStart;
-
 
 void initiateDeepSleepForReporting();
 bool checkHallForReset();
 void initSensor();
 void checkForReset();
-void readGeneralPrefs();
 String getShortMac();
-void resetSettings();
 
 void setup()
 {
@@ -49,7 +46,8 @@ void setup()
 
     // Read general prefs
     Serial.println("Reading general prefs...");
-    readGeneralPrefs();
+    generalSettings = new GeneralSettings();
+    generalSettings->initialize();
     Serial.println("General prefs read!");
 
     // Initialize sensor
@@ -73,8 +71,8 @@ void setup()
     if (settingSensorType == None)
     {
         Serial.println("Setting up web server for normal operation...");
-        webServer = new WebServerSensor(sensor);
-        webServer->startWebServer();
+        webServer = new WebServerSensor(sensor, generalSettings);
+        webServer->startWebServer(true);
         Serial.println("Webserver set up for normal operation!");        
     }
     else if (settingPassive)
@@ -94,7 +92,7 @@ void setup()
         Serial.println("Sensor started!");
 
         Serial.println("Setting up web server for normal operation...");
-        webServer = new WebServerSensor(sensor);
+        webServer = new WebServerSensor(sensor, generalSettings);
         webServer->startWebServer();
         Serial.println("Webserver set up for normal operation!");        
     }
@@ -102,7 +100,8 @@ void setup()
 
 void loop()
 {
-    // put your main code here, to run repeatedly:
+    sensor->loop();
+    delay(1);
 }
 
 void initiateDeepSleepForReporting()
@@ -130,64 +129,22 @@ void checkForReset()
     {
         Serial.println("Hall sensor threshold exceeded! Resetting settings...");
         EspWifiSetup::resetSettings();
-        resetSettings();
+        generalSettings->resetSettings();
 
-        if (sensor) {
-            sensor->resetSettings();
-        }
+        if (sensor)        
+            sensor->resetSettings();        
     }
 }
 
 void initSensor() 
 {
-    switch(settingSensorType)
-    {
-        case Thermometer:
-            sensor = new SensorThermometer();
-            break;
-        case Moisture:
-            sensor = new SensorMoisture();
-            break;
-    }
-}
-
-void readGeneralPrefs()
-{
-
-    Preferences prefs;
-    prefs.begin(GENERAL_PREFS_NAME, true);
-
-    settingSensorName = prefs.getString(GENERAL_PREF_SENSOR_NAME, getShortMac());
-    settingActivateReporting = prefs.getBool(GENERAL_PREF_ACTIVATE_REPORTING, false);
-    settingBaseAddress = prefs.getString(GENERAL_PREF_BASE_ADDRESS, "");
-    settingIntervalSecs = prefs.getUInt(GENERAL_PREF_REPORTING_INTERVAL_SECS, 1800);
-    settingPassive = prefs.getBool(GENERAL_PREF_PASSIVE, false);
-    settingReportBattery = prefs.getBool(GENERAL_PREF_ACTIVATE_REPORTING_BAT, false);
-    settingReportBatteryAddress = prefs.getString(GENERAL_PREF_ACTIVATE_REPORTING_BAT, "");
-    settingSensorType = (SensorType) prefs.getInt(GENERAL_PREF_SENSOR_TYPE, 0);
-
-    prefs.end();
-}
-
-String getShortMac()
-{
-    uint8_t mac[6];
-    esp_read_mac(mac, ESP_MAC_WIFI_STA);
-
-    String macStringLastPart = "";
-    for (int i = 4; i < 6; i++)
-    {
-        macStringLastPart += String(mac[i], HEX);
-    }
-
-    return macStringLastPart;
-}
-
-
-void resetSettings()
-{
-    Preferences prefs;
-    prefs.begin(GENERAL_PREFS_NAME, false);
-    prefs.clear();
-    prefs.end();
+    // switch(settingSensorType)
+    // {
+    //     case Thermometer:
+    //         sensor = new SensorThermometer();
+    //         break;
+    //     case Moisture:
+    //         sensor = new SensorMoisture();
+    //         break;
+    // }
 }

@@ -60,11 +60,25 @@ class SensorBase
          * 'setCurrentSettings(settings)' will be called. If that function is
          * implemented it will be given all current settings.
          * 
-         * Data should be formatted as JSON.
+         * Data should be formatted as a single JSON object.
          * 
          * @return JSON as String containing current sensor settings.
          */ 
         virtual String getSettings();
+
+        /** 
+         * Called when reporting is active every time reporting will be done. Be aware that this 
+         * function is called soon after bootup. The microcontroller resets afterwards.
+         * 
+         * @param baseAddress The base address of the device / server the values should be send to.
+         */
+        virtual void executeReporting(String baseAddress);
+
+        /**
+         * This function is called very regularly and often. You can use it to asynchronously 
+         * update values, which are retrieved by the webserver when the web page is visited.
+         */
+        virtual void loop();
 };
 
 #endif

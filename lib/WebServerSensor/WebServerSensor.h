@@ -8,17 +8,21 @@
 #include <Constants.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+#include <RootPage.h>
+#include <SettingsPage.h>
+#include <GeneralSettings.h>
 
 class WebServerSensor
 {
     public:
-        WebServerSensor(SensorBase *sensor);
+        WebServerSensor(SensorBase *sensor, GeneralSettings *generalSettings);
         ~WebServerSensor();
-        void startWebServer();
+        void startWebServer(bool onlySettings = false);
 
     private:
         SensorBase *sensor = NULL;
         AsyncWebServer *webServer = NULL;
+        GeneralSettings *generalSettings = NULL;
 
         void handleRootPage(AsyncWebServerRequest *request);
         void handleSettingsPage(AsyncWebServerRequest *request);
