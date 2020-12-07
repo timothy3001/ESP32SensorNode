@@ -4,31 +4,27 @@
 #include <WebServerSensor.h>
 #include <Constants.h>
 #include <GeneralSettings.h>
+#include <HelperFunctions.h>
 
 const int PIN_BATTERY_MONITORING = 35;
 const unsigned int TIMES_HALL_READ = 10;
 const unsigned int DELAY_MS_HALL_READ = 100;
 const unsigned int THRESHOLD_HALL = 30;
-
-String settingSensorName;
-bool settingActivateReporting;
-String settingBaseAddress;
-unsigned int settingIntervalSecs;
-bool settingPassive;
-bool settingReportBattery;
-String settingReportBatteryAddress;
-SensorType settingSensorType = Thermometer;
+const int NUMBER_SAMPLES_BATTERY = 10;
 
 SensorBase* sensor = NULL;
 WebServerSensor* webServer = NULL;
 GeneralSettings* generalSettings = NULL;
 unsigned long millisStart;
 
+float currentBatteryStatus = -1.0F;
+
 void initiateDeepSleepForReporting();
 bool checkHallForReset();
 void initSensor();
 void checkForReset();
 String getShortMac();
+void handleReporting();
 
 void setup()
 {
@@ -62,20 +58,21 @@ void setup()
         
     // Connecting to WiFi. If WiFi is not set up at all the WiFi setup is started
     Serial.println("Setting up wifi...");
-    if (!EspWifiSetup::setup(String("Sensor-") + settingSensorName, false, settingPassive) && settingPassive)
+    if (!EspWifiSetup::setup(String("Sensor-") + generalSettings->sensorName, false, generalSettings->passiveOperation) && 
+        generalSettings->passiveOperation)
     {
         initiateDeepSleepForReporting();
     }
     Serial.println("WiFi successfully set up!");
 
-    if (settingSensorType == None)
+    if (generalSettings->sensorType == None)
     {
         Serial.println("Setting up web server for normal operation...");
         webServer = new WebServerSensor(sensor, generalSettings);
         webServer->startWebServer(true);
         Serial.println("Webserver set up for normal operation!");        
     }
-    else if (settingPassive)
+    else if (generalSettings->passiveOperation)
     {
         Serial.println("Passive mode active");
 
@@ -83,7 +80,7 @@ void setup()
 
         // Call sensor reporting
 
-        // Go to sleep again
+        initiateDeepSleepForReporting();
     }
     else
     {
@@ -101,12 +98,13 @@ void setup()
 void loop()
 {
     sensor->loop();
+    handleReporting();
     delay(1);
 }
 
 void initiateDeepSleepForReporting()
 {
-    esp_sleep_enable_timer_wakeup(settingIntervalSecs * 1000 * 1000);
+    esp_sleep_enable_timer_wakeup(generalSettings->intervalSeconds * 1000 * 1000);
     esp_deep_sleep_start();
 }
 
@@ -147,4 +145,68 @@ void initSensor()
     //         sensor = new SensorMoisture();
     //         break;
     // }
+}
+
+
+unsigned long lastReportingChecked = 0;
+void handleReporting()
+{
+    if (generalSettings->reportingActive)
+    {
+        unsigned long now = millis();
+        if (lastReportingChecked == 0 || lastReportingChecked + generalSettings->intervalSeconds * 1000 < now || lastReportingChecked > now)
+        {
+            lastReportingChecked = millis();
+            executeReporting();
+        }
+    }
+}
+
+void executeReporting()
+{    
+    Serial.println("Reporting executing...");
+
+    if (generalSettings->reportingBatteryActive)
+    {
+        if (generalSettings->reportingBatteryAddress.length() == 0)
+        {
+            Serial.println("Invalid setting for address battery found!");
+        }
+        else if (currentBatteryStatus < 0.0F)
+        {
+            Serial.println(String("Invalid battery status found! Cannot finish reporting successfully!"));
+        }
+        else
+        {
+            updateBatteryStatus();
+
+            HelperFunctions::sendPutRequest(generalSettings->reportingBatteryAddress, String(currentBatteryStatus));
+            Serial.println(String("Reporting battery finished!"));
+        }
+    }
+
+    sensor->executeReporting(generalSettings->baseAddress);
+
+    Serial.println("Reporting done!");
+}
+
+void updateBatteryStatus()
+{
+    if (generalSettings->reportingBatteryActive)
+    {
+        int sumValues = 0;
+        for (int i = 0; i < NUMBER_SAMPLES_BATTERY; i++)
+        {
+            sumValues += analogRead(PIN_BATTERY_MONITORING);
+            delay(10);
+        }
+
+        float value = (float)sumValues / (float)NUMBER_SAMPLES_BATTERY;
+        float batteryVoltage = ((float)value / 2047.0F) * 4.2F;
+
+        currentBatteryStatus = (batteryVoltage - (2.8F)) / (4.2F - 2.8F);
+
+        Serial.println(String("Current battery level: ") + String(currentBatteryStatus * 100) + String("% (") + String(batteryVoltage) + String(" V) Raw: ") + String(value));
+        Serial.println(value);
+    }
 }
