@@ -33,7 +33,6 @@ void WebServerSensor::startWebServer(bool onlySettings)
     webServer->begin();    
 }
 
-
 void WebServerSensor::handleRootPage(AsyncWebServerRequest *request)
 {
     request->send_P(200, "text/html", rootPage);
@@ -42,6 +41,7 @@ void WebServerSensor::handleRootPage(AsyncWebServerRequest *request)
 void WebServerSensor::handleSettingsPage(AsyncWebServerRequest *request)
 {
     request->send_P(200, "text/html", settingsPage);
+    AsyncResponseStream *response = request->beginResponseStream("text/html");    
 }
 
 void WebServerSensor::handleGetSettings(AsyncWebServerRequest *request)

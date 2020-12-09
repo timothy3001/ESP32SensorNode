@@ -17,14 +17,15 @@ WebServerSensor* webServer = NULL;
 GeneralSettings* generalSettings = NULL;
 unsigned long millisStart;
 
-float currentBatteryStatus = -1.0F;
-
+// Functions used
 void initiateDeepSleepForReporting();
 bool checkHallForReset();
 void initSensor();
 void checkForReset();
 String getShortMac();
 void handleReporting();
+float getBatteryStatus();
+void executeReporting();
 
 void setup()
 {
@@ -75,12 +76,12 @@ void setup()
     else if (generalSettings->passiveOperation)
     {
         Serial.println("Passive mode active");
+        executeReporting();
 
-        // Do battery reporting
-
-        // Call sensor reporting
-
+        Serial.println("Initiating deep sleep...");
         initiateDeepSleepForReporting();
+
+        delay(500);
     }
     else
     {
@@ -147,7 +148,6 @@ void initSensor()
     // }
 }
 
-
 unsigned long lastReportingChecked = 0;
 void handleReporting()
 {
@@ -168,6 +168,8 @@ void executeReporting()
 
     if (generalSettings->reportingBatteryActive)
     {
+        float currentBatteryStatus = getBatteryStatus();
+
         if (generalSettings->reportingBatteryAddress.length() == 0)
         {
             Serial.println("Invalid setting for address battery found!");
@@ -178,9 +180,12 @@ void executeReporting()
         }
         else
         {
-            updateBatteryStatus();
-
-            HelperFunctions::sendPutRequest(generalSettings->reportingBatteryAddress, String(currentBatteryStatus));
+            HelperFunctions::sendPutRequest(
+                generalSettings->baseAddress + 
+                String("/") + 
+                generalSettings->reportingBatteryAddress, 
+                String(currentBatteryStatus)
+            );
             Serial.println(String("Reporting battery finished!"));
         }
     }
@@ -190,23 +195,22 @@ void executeReporting()
     Serial.println("Reporting done!");
 }
 
-void updateBatteryStatus()
-{
-    if (generalSettings->reportingBatteryActive)
+float getBatteryStatus()
+{    
+    int sumValues = 0;
+    for (int i = 0; i < NUMBER_SAMPLES_BATTERY; i++)
     {
-        int sumValues = 0;
-        for (int i = 0; i < NUMBER_SAMPLES_BATTERY; i++)
-        {
-            sumValues += analogRead(PIN_BATTERY_MONITORING);
-            delay(10);
-        }
-
-        float value = (float)sumValues / (float)NUMBER_SAMPLES_BATTERY;
-        float batteryVoltage = ((float)value / 2047.0F) * 4.2F;
-
-        currentBatteryStatus = (batteryVoltage - (2.8F)) / (4.2F - 2.8F);
-
-        Serial.println(String("Current battery level: ") + String(currentBatteryStatus * 100) + String("% (") + String(batteryVoltage) + String(" V) Raw: ") + String(value));
-        Serial.println(value);
+        sumValues += analogRead(PIN_BATTERY_MONITORING);
+        delay(10);
     }
+
+    float value = (float)sumValues / (float)NUMBER_SAMPLES_BATTERY;
+    float batteryVoltage = ((float)value / 2047.0F) * 4.2F;
+
+    float currentBatteryStatus = (batteryVoltage - (2.8F)) / (4.2F - 2.8F);
+
+    Serial.println(String("Current battery level: ") + String(currentBatteryStatus * 100) + String("% (") + String(batteryVoltage) + String(" V) Raw: ") + String(value));
+    Serial.println(value);
+
+    return currentBatteryStatus;
 }

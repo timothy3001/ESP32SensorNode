@@ -12,7 +12,9 @@ class SensorBase
         /**
          * Called at startup. You can use it for initialization.
          * Prefer to do initialization for reading out sensor values in this function
-         * and not in the constructor
+         * and not in the constructor.
+         * 
+         * It is recommended to get the first reading of the sensor here.
          */
         virtual void begin();
 

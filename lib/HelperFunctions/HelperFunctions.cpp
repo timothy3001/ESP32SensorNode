@@ -21,3 +21,25 @@ void HelperFunctions::sendPutRequest(String address, String value)
         Serial.println(String("Server returned an error status code sending to '") + address + String("': '") + String(resCode) + String("'!"));
     }
 }
+
+void HelperFunctions::stripLastSlash(String value)
+{
+    if (value.length() == 0)
+        return;
+
+    while(value.charAt(value.length() -1) == '/')
+    {
+        value.remove(value.length() -1, 1);
+    }
+}
+
+void HelperFunctions::stripFirstSlash(String value)
+{
+    if (value.length() == 0)
+        return;
+
+    while(value.charAt(0) == '/')
+    {
+        value.remove(0, 1);
+    }
+}

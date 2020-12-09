@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <Constants.h>
 #include <Preferences.h>
+#include <HelperFunctions.h>
 
 class GeneralSettings
 {
