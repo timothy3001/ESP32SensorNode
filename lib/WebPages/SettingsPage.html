@@ -1,0 +1,157 @@
+<html>
+
+  <head>
+    <title id="app-title">Settings SensorNode</title>
+    <style>
+      #base-app {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      html {
+        background-color:#2D333C;
+        margin: 0;
+        padding: 0;        
+      }
+
+      body {
+        color: #DDDDDD;
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 20px;
+        padding: 0;
+      }
+
+      hr {
+        width: 100%;
+        height: 1.5px;
+        background-color: #DDDDDD;
+        border: 0;
+        stroke-width: 5px;
+      }
+
+      .home-button {
+        width: 35px;
+        height: 35px;
+        align-self: center;
+        flex-basis: auto;
+      }
+
+      #sensor-name {
+        flex-basis: content;
+      }
+
+      main {
+        flex-direction: column;
+      }
+
+      .setting-container {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 15px;
+      }
+
+      .setting-container > label {
+        margin-right: 10px;
+        align-self: center;
+        
+      }
+
+      .setting-container > input {
+        align-self: center;
+        max-width: 250px;
+      }
+
+      .setting-container > input.number-input {
+        max-width: 60px;
+      }
+
+      .setting-container > input.url-input {
+        max-width: 350px;
+        width: 250px;
+      }
+
+    </style>
+
+    <script>      
+      window.onload = () => {
+        updateTitle();
+      }
+
+      function updateTitle() {
+        if (window.appTitle !== undefined) {
+          var newTitle = "Settings" + window.appTitle;
+          document.getElementById("app-title").textContent = newTitle;
+          document.getElementById("sensor-name").textContent = newTitle;
+        }
+      }
+
+    </script>        
+  </head>
+  <body>
+    <div id="base-app">
+      <header>
+        <div>
+          <h1 id="sensor-name">Settings SensorNode</h1>
+        </div>
+        <a class="home-button" href="/">
+          <svg viewBox='0 0 24 24' width='35px' height='35px'><path fill='#8890AA' d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
+        </a>
+      </header>
+      <hr />
+      <main>
+        <h2>General settings</h2>
+        <div class="setting-container">
+          <label>Sensor name:</label>
+          <input type="text" id="inputSensorName"/>
+        </div>
+        <div class="setting-container">
+          <label>Sensor type:</label>
+          <select id="inputSensorType">
+            <option value="None" selected>--- Select sensor type ---</option>
+            <option value="thermometer">Thermometer</option>
+            <option value="plantmoisture">Plant moisture sensor</option>
+          </select>
+        </div>
+        <div class="setting-container">
+          <label>Activate reporting:</label>
+          <input type="checkbox" id="inputActivateReporting" />
+        </div>
+        <div class="setting-container">
+          <label>Base address:</label>
+          <input type="text" class="url-input" id="inputBaseAddress"/>
+        </div>
+        <div class="setting-container">
+          <label>Reporting Interval (secs):</label>
+          <input type="number" min="10" max="604800" class="number-input" id="inputReportingInterval" />
+        </div>
+        <div class="setting-container">
+          <label>Passive reporting:</label>
+          <input type="checkbox" id="inputPassiveReporting" />
+        </div>
+        <div class="setting-container">
+          <label>Battery reporting:</label>
+          <input type="checkbox" id="inputBatteryReporting" />
+        </div>
+        <div class="setting-container">
+          <label>Battery reporting subaddress:</label>
+          <input type="text" id="inputBatteryReportingAddress" />
+        </div>
+        <hr />
+
+        <br><br><br>
+        <!-- Sensor specific content here -->
+        ###### SENSOR CONTENT ######
+        <!-- End of sensor specific content -->
+      </main>
+    </div>
+  </body>
+</html>
