@@ -173,3 +173,8 @@ void SensorThermometer::logMessage(String msg)
 {
     Serial.println(String("SensorThermometer: ") + msg);
 }
+
+String SensorThermometer::getNamePrefix()
+{
+    
+}

@@ -1,132 +1,100 @@
 #include <Arduino.h>
 
 const char rootPage[] PROGMEM = R"=====(
-<!DOCTYPE html>
-<html>
+  <html>
+
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>Thermometer</title>
-
     <style>
-      body {
+      #base-app {
+        width: 100%%;
+        height: 100%%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        width: 100%%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      html {
+        background-color:#2D333C;
         margin: 0;
-        padding: 30px;
-        background-color: white;
-        color: #535353;
-        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+        padding: 0;        
       }
 
-      body > h1 {
-        margin-top: 10px;
+      body {
+        color: #DDDDDD;
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 20px;
+        padding: 0;
       }
 
-      .temperatureLabel {
-        width: 120px;
-        font-size: 4em;
-        display: block;
-        margin-bottom: 10px;
+      hr {
+        width: 100%%;
+        height: 1.5px;
+        background-color: #DDDDDD;
+        border: 0;
+        stroke-width: 5px;
       }
 
-      .row {
-        width: 100%;
-        padding-left: 10px;
-        margin-top: 30px;
+      .settings-button {
+        width: 35px;
+        height: 35px;
+        align-self: center;
+        flex-basis: auto;
+
+
       }
 
-      .openSettingsButton {
-        height: 40px;
-        border-radius: 5px;
-        border-width: 5px;
-        border-style: hidden;
-        width: 150px;
-        font-size: 1.1em;
+      #sensor-name {
+        flex-basis: content;
       }
 
-      @media (min-width: 576px) {
-        .inputLabel {
-          display: inline-block;
-        }
-
-        .inputLabel {
-          margin-bottom: 0;
-        }
-      }
     </style>
 
     <script>
-      var headingThermometer;
-
-      function loadAndFillHeadings() {
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("GET", "/settings", true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              settingsObject = JSON.parse(xhr.responseText);
-
-              // Setting title
-              var name = "Thermometer-" + settingsObject.name;
-              window.document.title = name;
-              headingThermometer.innerText = name;
-            } else {
-              window.alert("Could not retrieve settings!");
-            }
-          }
-        };
-
-        xhr.send(null);
-      }
-
-      function updateTemperature() {
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("GET", "/temperature", true);
-
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              var temp = parseFloat(xhr.responseText).toFixed(1);
-
-              textTemperature.innerText = temp + "\u00b0C";
-            } else {
-              console.log("Could not retrieve temperature!");
-              textTemperature.innerText = "NaN";
-            }
-          }
-        };
-
-        xhr.send(null);
-      }
-
       window.onload = () => {
-        headingThermometer = document.getElementById("headingThermometer");
-        textTemperature = document.getElementById("textTemperature");
+        window.setTimeout(update, 1000);
+      }
 
-        loadAndFillHeadings();
+      function update() {
+        var xlr = new XMLHttpRequest();
+        xlr.open('GET', '/api/values', false);
+        xlr.send(null);
+        
+        xlr.onreadystatechange = () => {
+          if (this.readystate == 4 && this.status == 200) {
+            if (typeof updateValues == "function") {
+              updateValues(this.responsetext);
+            }
+          }
+        }
 
-        updateTemperature();
-        window.setInterval(updateTemperature, 5000);
-      };
-    </script>
+        window.setTimeout(update, 1000);
+      }
+    </script>        
   </head>
-
   <body>
-    <h1 style="font-size: 3em" id="headingThermometer">Thermometer</h1>
-    <hr />
-    <div class="row">
-      <span class="temperatureLabel" id="textTemperature"></span>
-    </div>
-    <div class="row">
-      <button class="openSettingsButton" id="openSettingsButton" onclick="location.href = '/settingsPage';">
-        Open settings
-      </button>
+    <div id="base-app">
+      <header>
+        <div>
+          <h1 id="sensor-name">SensorNode</h1>
+        </div>
+        <a class="settings-button" href="/settings">
+          <svg viewBox='0 0 24 24' width='35px' height='35px'><path fill='#8890AA' d='M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'></path></svg>
+        </a>
+      </header>
+      <hr />
+      <main>
+        <!-- Sensor specific content here -->
+        %s
+        <!-- End of sensor specific content -->
+      </main>
     </div>
   </body>
-</html>
 
-
+  </html>
 )=====";

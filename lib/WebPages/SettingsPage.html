@@ -32,7 +32,7 @@
 
       hr {
         width: 100%;
-        height: 1.5px;
+        height: 2px;
         background-color: #DDDDDD;
         border: 0;
         stroke-width: 5px;
@@ -114,14 +114,6 @@
           <input type="text" id="inputSensorName"/>
         </div>
         <div class="setting-container">
-          <label>Sensor type:</label>
-          <select id="inputSensorType">
-            <option value="None" selected>--- Select sensor type ---</option>
-            <option value="thermometer">Thermometer</option>
-            <option value="plantmoisture">Plant moisture sensor</option>
-          </select>
-        </div>
-        <div class="setting-container">
           <label>Activate reporting:</label>
           <input type="checkbox" id="inputActivateReporting" />
         </div>
@@ -146,10 +138,9 @@
           <input type="text" id="inputBatteryReportingAddress" />
         </div>
         <hr />
-
-        <br><br><br>
+        <h2>Sensor settings</h2>
         <!-- Sensor specific content here -->
-        ###### SENSOR CONTENT ######
+        %s
         <!-- End of sensor specific content -->
       </main>
     </div>

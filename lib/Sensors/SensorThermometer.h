@@ -21,7 +21,8 @@ class SensorThermometer : public SensorBase
         String getValues();
         String getSettings();
         void executeReporting(String baseAddress);
-    
+        String getNamePrefix();
+
     private:
         const char* SENSOR_THERMOMETER_PREF_DATA_PIN = "dataPin";
         const char* SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS = "address";

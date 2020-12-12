@@ -1,7 +1,7 @@
 #ifndef Constants_h_
 #define Constants_h_
 
-enum SensorType { None = 0, Thermometer = 1, Moisture = 2 };
+enum SensorType { None = 0, Thermometer = 1, MoisturePlants = 2 };
 
 const char* const GENERAL_PREFS_NAME = "general";
 const char* const GENERAL_PREF_SENSOR_NAME = "name";

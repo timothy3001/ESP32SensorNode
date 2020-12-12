@@ -6,6 +6,10 @@
 #include <GeneralSettings.h>
 #include <HelperFunctions.h>
 
+// Define what kind of sensor you want to use. 
+// Available options: Thermometer, MoisturePlants
+#define SENSOR_KIND Thermometer
+
 const int PIN_BATTERY_MONITORING = 35;
 const unsigned int TIMES_HALL_READ = 10;
 const unsigned int DELAY_MS_HALL_READ = 100;

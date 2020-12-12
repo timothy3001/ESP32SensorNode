@@ -35,13 +35,18 @@ void WebServerSensor::startWebServer(bool onlySettings)
 
 void WebServerSensor::handleRootPage(AsyncWebServerRequest *request)
 {
-    request->send_P(200, "text/html", rootPage);
+    AsyncResponseStream *response = request->beginResponseStream("text/html");
+    response->setCode(200);
+    response->printf(rootPage, sensor->getSensorInformationHtml());
+    request->send(response);
 }
 
 void WebServerSensor::handleSettingsPage(AsyncWebServerRequest *request)
 {
-    request->send_P(200, "text/html", settingsPage);
-    AsyncResponseStream *response = request->beginResponseStream("text/html");    
+    AsyncResponseStream *response = request->beginResponseStream("text/html");
+    response->setCode(200);
+    response->printf(settingsPage, sensor->getSensorInformationHtml());
+    request->send(response);
 }
 
 void WebServerSensor::handleGetSettings(AsyncWebServerRequest *request)

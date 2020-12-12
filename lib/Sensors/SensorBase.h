@@ -81,6 +81,11 @@ class SensorBase
          * update values, which are retrieved by the webserver when the web page is visited.
          */
         virtual void loop();
+
+        /**
+         *  
+         */
+        virtual String getNamePrefix();
 };
 
 #endif
