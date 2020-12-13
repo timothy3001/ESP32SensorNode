@@ -5,7 +5,9 @@ void GeneralSettings::initialize()
     Preferences prefs;
     prefs.begin(GENERAL_PREFS_NAME, true);
 
-    this->sensorName = prefs.getString(GENERAL_PREF_SENSOR_NAME, getShortMac());
+    String defaultName = String("Sensor-") + this->getShortMac();
+
+    this->sensorName = prefs.getString(GENERAL_PREF_SENSOR_NAME, defaultName);
     this->reportingActive = prefs.getBool(GENERAL_PREF_ACTIVATE_REPORTING, false);
     this->baseAddress = prefs.getString(GENERAL_PREF_BASE_ADDRESS, String(""));
     this->intervalSeconds = prefs.getUInt(GENERAL_PREF_REPORTING_INTERVAL_SECS, 1800);

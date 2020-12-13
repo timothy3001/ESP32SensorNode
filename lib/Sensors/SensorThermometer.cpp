@@ -176,5 +176,5 @@ void SensorThermometer::logMessage(String msg)
 
 String SensorThermometer::getNamePrefix()
 {
-    
+    return String("Thermometer");
 }

@@ -1,6 +1,7 @@
 <html>
 
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="app-title">Settings SensorNode</title>
     <style>
       #base-app {
@@ -94,16 +95,144 @@
     </style>
 
     <script>      
+      window.appTitle = "%s";
+
+      var inputSensorName;
+      var inputActivateReporting;
+      var inputBaseAddress;
+      var inputReportingInterval;
+      var inputPassiveReporting;
+      var inputBatteryReporting;
+      var inputBatteryReportingAddress;
+
       window.onload = () => {
         updateTitle();
+        document.getElementById('save-button').addEventListener('click', saveButtonClick);
+        document.getElementById('reset-button').addEventListener('click', reset);
+
+        inputSensorName = document.getElementById("inputSensorName");
+        inputActivateReporting = document.getElementById("inputActivateReporting");
+        inputBaseAddress = document.getElementById("inputBaseAddress");
+        inputReportingInterval = document.getElementById("inputReportingInterval");
+        inputPassiveReporting = document.getElementById("inputPassiveReporting");
+        inputBatteryReporting = document.getElementById("inputBatteryReporting");
+        inputBatteryReportingAddress = document.getElementById("inputBatteryReportingAddress");
+
+        inputActivateReporting.addEventListener('click', updateInputsActivation);
+        inputBatteryReporting.addEventListener('click', updateInputsActivation);
+        
+        loadSettings();
       }
 
       function updateTitle() {
         if (window.appTitle !== undefined) {
-          var newTitle = "Settings" + window.appTitle;
+          var newTitle = "Settings " + window.appTitle;
           document.getElementById("app-title").textContent = newTitle;
           document.getElementById("sensor-name").textContent = newTitle;
         }
+      }
+
+      function updateInputsActivation() {
+        inputBaseAddress.disabled = true;
+        inputReportingInterval.disabled = true;
+        inputPassiveReporting.disabled = true;
+        inputBatteryReporting.disabled = true;
+        inputBatteryReportingAddress.disabled = true;
+
+        if (inputActivateReporting.checked) {
+          inputBaseAddress.disabled = false;
+          inputReportingInterval.disabled = false;
+          inputPassiveReporting.disabled = false;
+        }        
+
+        if (inputBatteryReporting.checked) {
+          inputBatteryReportingAddress.disabled = false;
+        }       
+        
+        inputSensorName.disabled = false;
+        inputActivateReporting.disabled = false;
+      }
+
+      function loadSettings() {
+        updateInputsActivation();
+      }
+
+      function getAndCheckGeneralSettings() {
+        if(!inputSensorName.value || inputSensorName.value.length > 32) {
+          window.alert('Please enter a valid sensor name. Name must not be longer than 32 characters. Use letters, numbers and hyphen only!');
+          return undefined;
+        }
+        if (inputActivateReporting.checked && !inputBaseAddress.value) {
+          window.alert('Please enter a valid base address!');
+          return undefined;
+        }
+        if (inputActivateReporting.checked && 
+          (!inputReportingInterval.value || inputReportingInterval.value < 10 || inputReportingInterval.value > 604800)) {
+          window.alert('Please enter a valid interval. Value must be at least 10 seconds and max. 604800 seconds!');
+          return undefined;
+        }
+        if (inputBatteryReporting.checked && inputActivateReporting.checked && !inputBatteryReportingAddress.value) {
+          window.alert('Please enter a valid reporting sub address for battery level!');
+          return undefined;
+        }
+        
+        var generalSettingsObj = {
+          'name': inputSensorName.value,
+          'activateRep': inputActivateReporting.checked,
+          'baseAdd': inputBaseAddress.value,
+          'intervalSecs': parseInt(inputReportingInterval.value),
+          'passive': inputPassiveReporting.checked,
+          'activateRepBat': inputBatteryReporting.checked,
+          'batAdd': inputBatteryReportingAddress
+        };
+
+        return generalSettingsObj;
+      }
+
+      function saveButtonClick() {
+        var doSave = window.confirm('Are you sure you want to save and reboot the microcontroller?');
+        
+        if (!doSave)
+          return;
+
+        if (typeof updateValues !== "function") {
+          window.alert('Sensor implementation error: function "getSensorSettings()" does not exist!');
+          return;
+        }
+
+        var generalSettingsObj = getAndCheckGeneralSettings();
+        var sensorSettingsObj = getSensorSettings();
+
+        if (generalSettingsObj == undefined || sensorSettingsObj == undefined)
+          return;
+
+        var settingsObj = {
+          'general': generalSettingsObj,
+          'sensor': sensorSettingsObj
+        };
+
+        var xlr = new XMLHttpRequest();
+        xlr.open('POST', '/api/settings', false);
+        xlr.send(settingsObj);
+        
+        xlr.onreadystatechange = () => {
+          if (this.readystate == 4 && this.status != 200) {
+            window.alert('Could not save settings!');
+          } else if (this.readystate == 4 && this.status == 200) {
+            window.alert('Settings saved! Restarting microcontroller now.');
+          }
+        }   
+      }
+
+      function reset() {
+        var doReset = window.confirm('Are you sure you want to reset all settings including WiFi settings?');
+        
+        if (!doReset)
+          return;   
+        
+        var xlr = new XMLHttpRequest();
+        xlr.open('POST', '/api/resetSettings', false);
+        xlr.send(null);
       }
 
     </script>        
@@ -123,31 +252,31 @@
         <h2>General settings</h2>
         <div class="setting-container">
           <label>Sensor name:</label>
-          <input type="text" id="inputSensorName"/>
+          <input type="text" id="inputSensorName" disabled />
         </div>
         <div class="setting-container">
           <label>Activate reporting:</label>
-          <input type="checkbox" id="inputActivateReporting" />
+          <input type="checkbox" id="inputActivateReporting" disabled />
         </div>
         <div class="setting-container">
           <label>Base address:</label>
-          <input type="text" class="url-input" id="inputBaseAddress"/>
+          <input type="text" class="url-input" id="inputBaseAddress" disabled/>
         </div>
         <div class="setting-container">
           <label>Reporting Interval (secs):</label>
-          <input type="number" min="10" max="604800" class="number-input" id="inputReportingInterval" />
+          <input type="number" min="10" max="604800" class="number-input" id="inputReportingInterval" disabled/>
         </div>
         <div class="setting-container">
           <label>Passive reporting:</label>
-          <input type="checkbox" id="inputPassiveReporting" />
+          <input type="checkbox" id="inputPassiveReporting" disabled/>
         </div>
         <div class="setting-container">
           <label>Battery reporting:</label>
-          <input type="checkbox" id="inputBatteryReporting" />
+          <input type="checkbox" id="inputBatteryReporting" disabled/>
         </div>
         <div class="setting-container">
           <label>Battery reporting subaddress:</label>
-          <input type="text" id="inputBatteryReportingAddress" />
+          <input type="text" id="inputBatteryReportingAddress" disabled/>
         </div>
         <hr />
         <h2>Sensor settings</h2>

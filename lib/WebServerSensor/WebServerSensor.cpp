@@ -30,6 +30,7 @@ void WebServerSensor::startWebServer(bool onlySettings)
         { 
             this->handleUpdateSettings(request, data, len, index, total); 
         });
+    webServer->on("/api/resetSettings", HTTP_POST, [&](AsyncWebServerRequest *request) { this->handleResetSettings(request); });
     webServer->begin();    
 }
 
@@ -37,7 +38,7 @@ void WebServerSensor::handleRootPage(AsyncWebServerRequest *request)
 {
     AsyncResponseStream *response = request->beginResponseStream("text/html");
     response->setCode(200);
-    response->printf(rootPage, sensor->getSensorInformationHtml());
+    response->printf(rootPage, generalSettings->sensorName, sensor->getSensorInformationHtml());
     request->send(response);
 }
 
@@ -45,7 +46,7 @@ void WebServerSensor::handleSettingsPage(AsyncWebServerRequest *request)
 {
     AsyncResponseStream *response = request->beginResponseStream("text/html");
     response->setCode(200);
-    response->printf(settingsPage, sensor->getSensorInformationHtml());
+    response->printf(settingsPage, generalSettings->sensorName, sensor->getConfigurationPageHtml());
     request->send(response);
 }
 
@@ -94,11 +95,21 @@ void WebServerSensor::handleUpdateSettings(AsyncWebServerRequest *request, uint8
                 this->updateGeneralSettings(doc[GENERAL_PREFS_NAME]);
             }
 
-            String serialized;
-            serializeJson(doc, serialized);
+            if (doc.containsKey(SENSOR_PREFS_NAME))
+            {
+                String serialized;
+                serializeJson(doc[SENSOR_PREFS_NAME], serialized);
 
-            sensor->updateSettings(serialized);
+                sensor->updateSettings(serialized);
+            }
         }        
+
+        request->send(200, "text/plain", "");
+        delay(200);
+
+        // Restarting ESP after saving configuration
+        ESP.restart();
+        delay(500);
     }
 }
 
@@ -128,4 +139,13 @@ void WebServerSensor::handleGetValues(AsyncWebServerRequest *request)
 {
     String valuesJson = sensor->getValues();
     request->send(200, "application/json", valuesJson);
+}
+
+void WebServerSensor::handleResetSettings(AsyncWebServerRequest *request)
+{
+    generalSettings->resetSettings();
+    sensor->resetSettings();
+    EspWifiSetup::resetSettings();
+    
+    request->send(200, "text/plain", "");
 }

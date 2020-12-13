@@ -55,7 +55,10 @@ class SensorBase
          * 
          * In addition to this you also must implement the javascript function 
          * 'getSensorSettings()' which should return the sensor specific settings the 
-         * user entered into the fields. It needs to be formatted as JSON.
+         * user entered into the fields. It needs to be formatted as JSON. This function 
+         * should also check whether the values entered by the user are valid. If not, 
+         * return 'undefined' to prevent the save function from executing. You can use
+         * window.alert to tell the user which mistake was made.
          * 
          * @return String that contains the sensor specific HTML code to be embedded.
          */

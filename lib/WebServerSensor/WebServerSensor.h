@@ -11,6 +11,7 @@
 #include <RootPage.h>
 #include <SettingsPage.h>
 #include <GeneralSettings.h>
+#include <EspWifiSetup.h>
 
 class WebServerSensor
 {
@@ -30,6 +31,7 @@ class WebServerSensor
         void handleUpdateSettings(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
         void handleGetValues(AsyncWebServerRequest *request);
         void updateGeneralSettings(JsonObject generalSettingsObj);
+        void handleResetSettings(AsyncWebServerRequest *request);
 };
 
 #endif
