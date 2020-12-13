@@ -53,6 +53,12 @@
         flex-direction: column;
       }
 
+      footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+      }
+
       .setting-container {
         display: flex;
         flex-direction: row;
@@ -77,6 +83,12 @@
       .setting-container > input.url-input {
         max-width: 350px;
         width: 250px;
+      }
+      
+      .footer-button {
+        margin-right: 15px;
+        margin-top: 5px;
+        height: 30px;
       }
 
     </style>
@@ -143,6 +155,10 @@
         %s
         <!-- End of sensor specific content -->
       </main>
+      <footer>
+        <input class="footer-button" id="reset-button" type="button" value="Factory reset"/>
+        <input class="footer-button" id="save-button" type="button" value="Save"/>        
+      </footer>
     </div>
   </body>
 </html>

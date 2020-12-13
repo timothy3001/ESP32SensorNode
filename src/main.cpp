@@ -6,6 +6,8 @@
 #include <GeneralSettings.h>
 #include <HelperFunctions.h>
 
+// TCPIP_HOSTNAME_MAX_SIZE 32
+
 // Define what kind of sensor you want to use. 
 // Available options: Thermometer, MoisturePlants
 #define SENSOR_KIND Thermometer
@@ -61,6 +63,8 @@ void setup()
     checkForReset();
     Serial.println("Check for settings reset done!");
         
+    WiFi.setHostname('grfwes');
+
     // Connecting to WiFi. If WiFi is not set up at all the WiFi setup is started
     Serial.println("Setting up wifi...");
     if (!EspWifiSetup::setup(String("Sensor-") + generalSettings->sensorName, false, generalSettings->passiveOperation) && 
