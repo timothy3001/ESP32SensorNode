@@ -1,9 +1,11 @@
 #include <Arduino.h>
 
 const char rootPage[] PROGMEM = R"=====(
-  <html>
+ <html>
 
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="app-title">SensorNode</title>
     <style>
       #base-app {
         width: 100%%;
@@ -56,8 +58,24 @@ const char rootPage[] PROGMEM = R"=====(
     </style>
 
     <script>
+      window.appTitle = "%s";
+
       window.onload = () => {
+        updateTitle();
+
+        if (typeof sensorOnload == 'function') {
+          sensorOnload();
+        }
+
         window.setTimeout(update, 1000);
+      }
+
+      function updateTitle() {
+        if (window.appTitle !== undefined) {
+          var newTitle = window.appTitle;
+          document.getElementById("app-title").textContent = newTitle;
+          document.getElementById("sensor-name").textContent = newTitle;
+        }
       }
 
       function update() {
@@ -96,5 +114,5 @@ const char rootPage[] PROGMEM = R"=====(
     </div>
   </body>
 
-  </html>
+</html>
 )=====";

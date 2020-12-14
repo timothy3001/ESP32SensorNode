@@ -3,130 +3,327 @@
 const char settingsPage[] PROGMEM = R"=====(
 <!DOCTYPE html>
 <html>
+
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>Thermometer</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="app-title">Settings SensorNode</title>
     <style>
-      body {
-        margin: 0;
-        padding: 30px;
-        background-color: white;
-        color: #535353;
-        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+      #base-app {
+        width: 100%%;
+        height: 100%%;
+        display: flex;
+        flex-direction: column;
       }
 
-      body > h1 {
+      header {
+        width: 100%%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      html {
+        background-color:#2D333C;
+        margin: 0;
+        padding: 0;        
+      }
+
+      body {
+        color: #DDDDDD;
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 20px;
+        padding: 0;
+      }
+
+      hr {
+        width: 100%%;
+        height: 2px;
+        background-color: #DDDDDD;
+        border: 0;
+        stroke-width: 5px;
+      }
+
+      .home-button {
+        width: 35px;
+        height: 35px;
+        align-self: center;
+        flex-basis: auto;
+      }
+
+      #sensor-name {
+        flex-basis: content;
+      }
+
+      main {
+        flex-direction: column;
+      }
+
+      footer {
+        display: flex;
+        justify-content: flex-end;
         margin-top: 10px;
       }
 
-      .temperatureLabel {
-        width: 120px;
-        font-size: 4em;
-        display: block;
-        margin-bottom: 10px;
+      .setting-container {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 15px;
       }
 
-      .row {
-        width: 100%;
-        padding-left: 10px;
-        margin-top: 30px;
+      .setting-container > label {
+        margin-right: 10px;
+        align-self: center;
+        
       }
 
-      .openSettingsButton {
-        height: 40px;
-        border-radius: 5px;
-        border-width: 5px;
-        border-style: hidden;
-        width: 150px;
-        font-size: 1.1em;
+      .setting-container > input {
+        align-self: center;
+        max-width: 250px;
       }
 
-      @media (min-width: 576px) {
-        .inputLabel {
-          display: inline-block;
-        }
-
-        .inputLabel {
-          margin-bottom: 0;
-        }
+      .setting-container > input.number-input {
+        max-width: 60px;
       }
+
+      .setting-container > input.url-input {
+        max-width: 350px;
+        width: 250px;
+      }
+      
+      .footer-button {
+        margin-right: 15px;
+        margin-top: 5px;
+        height: 30px;
+      }
+
     </style>
 
-    <script>
-      var headingThermometer;
+    <script>      
+      window.appTitle = "%s";
 
-      function loadAndFillHeadings() {
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("GET", "/settings", true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              settingsObject = JSON.parse(xhr.responseText);
-
-              // Setting title
-              var name = "Thermometer-" + settingsObject.name;
-              window.document.title = name;
-              headingThermometer.innerText = name;
-            } else {
-              window.alert("Could not retrieve settings!");
-            }
-          }
-        };
-
-        xhr.send(null);
-      }
-
-      function updateTemperature() {
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("GET", "/temperature", true);
-
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              var temp = parseFloat(xhr.responseText).toFixed(1);
-
-              textTemperature.innerText = temp + "\u00b0C";
-            } else {
-              console.log("Could not retrieve temperature!");
-              textTemperature.innerText = "NaN";
-            }
-          }
-        };
-
-        xhr.send(null);
-      }
+      var inputSensorName;
+      var inputActivateReporting;
+      var inputBaseAddress;
+      var inputReportingInterval;
+      var inputPassiveReporting;
+      var inputBatteryReporting;
+      var inputBatteryReportingAddress;
 
       window.onload = () => {
-        headingThermometer = document.getElementById("headingThermometer");
-        textTemperature = document.getElementById("textTemperature");
+        updateTitle();
+        document.getElementById('save-button').addEventListener('click', saveButtonClick);
+        document.getElementById('reset-button').addEventListener('click', reset);
 
-        loadAndFillHeadings();
+        inputSensorName = document.getElementById("inputSensorName");
+        inputActivateReporting = document.getElementById("inputActivateReporting");
+        inputBaseAddress = document.getElementById("inputBaseAddress");
+        inputReportingInterval = document.getElementById("inputReportingInterval");
+        inputPassiveReporting = document.getElementById("inputPassiveReporting");
+        inputBatteryReporting = document.getElementById("inputBatteryReporting");
+        inputBatteryReportingAddress = document.getElementById("inputBatteryReportingAddress");
 
-        updateTemperature();
-        window.setInterval(updateTemperature, 5000);
-      };
-    </script>
+        inputActivateReporting.addEventListener('click', updateInputsActivation);
+        inputBatteryReporting.addEventListener('click', updateInputsActivation);
+        
+        loadSettings();
+      }
+
+      function updateTitle() {
+        if (window.appTitle !== undefined) {
+          var newTitle = "Settings " + window.appTitle;
+          document.getElementById("app-title").textContent = newTitle;
+          document.getElementById("sensor-name").textContent = newTitle;
+        }
+      }
+
+      function updateInputsActivation() {
+        inputBaseAddress.disabled = true;
+        inputReportingInterval.disabled = true;
+        inputPassiveReporting.disabled = true;
+        inputBatteryReporting.disabled = true;
+        inputBatteryReportingAddress.disabled = true;
+
+        if (inputActivateReporting.checked) {
+          inputBaseAddress.disabled = false;
+          inputReportingInterval.disabled = false;
+          inputPassiveReporting.disabled = false;
+        }        
+
+        if (inputBatteryReporting.checked) {
+          inputBatteryReportingAddress.disabled = false;
+        }       
+        
+        inputSensorName.disabled = false;
+        inputActivateReporting.disabled = false;
+      }
+
+      function loadSettings() {
+        var xlr = new XMLHttpRequest();
+        xlr.open('GET', '/api/settings', false);
+        xlr.send(null);
+        
+        xlr.onreadystatechange = () => {
+          if (this.readystate == 4 && this.status == 200) {
+            var jsonSettings = JSON.parse(xlr.responseText);
+            displayCurrentSettings(jsonSettings);
+            updateInputsActivation();
+          }
+        }
+      }
+
+      function displayCurrentSettings(settings) {
+        var general = settings['general'];
+        var sensor = settings['sensor'];
+
+        inputSensorName.value = sensor['name'];
+        inputActivateReporting.checked = sensor['activateRep'];
+        inputBaseAddress.value = sensor['baseAdd'];
+        inputReportingInterval.value = sensor['intervalSecs'];
+        passive.checked = sensor['passive'];
+        inputBatteryReporting.checked = sensor['activateRepBat'];
+        inputBatteryReportingAddress.value = sensor['batAdd'];
+
+        if (typeof(displayCurrentSensorSettings) != 'function') {
+          window.alert('Sensor implementation error: "displayCurrentSensorSettings()" not implemented!');
+          return;
+        }
+
+        displayCurrentSensorSettings(sensor);
+      }
+
+      function getAndCheckGeneralSettings() {
+        if(!inputSensorName.value || inputSensorName.value.length > 32) {
+          window.alert('Please enter a valid sensor name. Name must not be longer than 32 characters. Use letters, numbers and hyphen only!');
+          return undefined;
+        }
+        if (inputActivateReporting.checked && !inputBaseAddress.value) {
+          window.alert('Please enter a valid base address!');
+          return undefined;
+        }
+        if (inputActivateReporting.checked && 
+          (!inputReportingInterval.value || inputReportingInterval.value < 10 || inputReportingInterval.value > 604800)) {
+          window.alert('Please enter a valid interval. Value must be at least 10 seconds and max. 604800 seconds!');
+          return undefined;
+        }
+        if (inputBatteryReporting.checked && inputActivateReporting.checked && !inputBatteryReportingAddress.value) {
+          window.alert('Please enter a valid reporting sub address for battery level!');
+          return undefined;
+        }
+        
+        var generalSettingsObj = {
+          'name': inputSensorName.value,
+          'activateRep': inputActivateReporting.checked,
+          'baseAdd': inputBaseAddress.value,
+          'intervalSecs': parseInt(inputReportingInterval.value),
+          'passive': inputPassiveReporting.checked,
+          'activateRepBat': inputBatteryReporting.checked,
+          'batAdd': inputBatteryReportingAddress
+        };
+
+        return generalSettingsObj;
+      }
+
+      function saveButtonClick() {
+        var doSave = window.confirm('Are you sure you want to save and reboot the microcontroller?');
+        
+        if (!doSave)
+          return;
+
+        if (typeof updateValues !== "function") {
+          window.alert('Sensor implementation error: function "getSensorSettings()" does not exist!');
+          return;
+        }
+
+        var generalSettingsObj = getAndCheckGeneralSettings();
+        var sensorSettingsObj = getSensorSettings();
+
+        if (generalSettingsObj == undefined || sensorSettingsObj == undefined)
+          return;
+
+        var settingsObj = {
+          'general': generalSettingsObj,
+          'sensor': sensorSettingsObj
+        };
+
+        var xlr = new XMLHttpRequest();
+        xlr.open('POST', '/api/settings', false);
+        xlr.send(settingsObj);
+        
+        xlr.onreadystatechange = () => {
+          if (this.readystate == 4 && this.status != 200) {
+            window.alert('Could not save settings!');
+          } else if (this.readystate == 4 && this.status == 200) {
+            window.alert('Settings saved! Restarting microcontroller now.');
+          }
+        }   
+      }
+
+      function reset() {
+        var doReset = window.confirm('Are you sure you want to reset all settings including WiFi settings?');
+        
+        if (!doReset)
+          return;   
+        
+        var xlr = new XMLHttpRequest();
+        xlr.open('POST', '/api/resetSettings', false);
+        xlr.send(null);
+      }
+
+    </script>        
   </head>
-
   <body>
-    <h1 style="font-size: 3em" id="headingThermometer">Thermometer</h1>
-    <hr />
-    <div class="row">
-      <span class="temperatureLabel" id="textTemperature"></span>
-    </div>
-    <div class="row">
-      <button class="openSettingsButton" id="openSettingsButton" onclick="location.href = '/settingsPage';">
-        Open settings
-      </button>
+    <div id="base-app">
+      <header>
+        <div>
+          <h1 id="sensor-name">Settings SensorNode</h1>
+        </div>
+        <a class="home-button" href="/">
+          <svg viewBox='0 0 24 24' width='35px' height='35px'><path fill='#8890AA' d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
+        </a>
+      </header>
+      <hr />
+      <main>
+        <h2>General settings</h2>
+        <div class="setting-container">
+          <label>Sensor name:</label>
+          <input type="text" id="inputSensorName" disabled />
+        </div>
+        <div class="setting-container">
+          <label>Activate reporting:</label>
+          <input type="checkbox" id="inputActivateReporting" disabled />
+        </div>
+        <div class="setting-container">
+          <label>Base address:</label>
+          <input type="text" class="url-input" id="inputBaseAddress" disabled/>
+        </div>
+        <div class="setting-container">
+          <label>Reporting Interval (secs):</label>
+          <input type="number" min="10" max="604800" class="number-input" id="inputReportingInterval" disabled/>
+        </div>
+        <div class="setting-container">
+          <label>Passive reporting:</label>
+          <input type="checkbox" id="inputPassiveReporting" disabled/>
+        </div>
+        <div class="setting-container">
+          <label>Battery reporting:</label>
+          <input type="checkbox" id="inputBatteryReporting" disabled/>
+        </div>
+        <div class="setting-container">
+          <label>Battery reporting subaddress:</label>
+          <input type="text" id="inputBatteryReportingAddress" disabled/>
+        </div>
+        <hr />
+        <h2>Sensor settings</h2>
+        <!-- Sensor specific content here -->
+        %s
+        <!-- End of sensor specific content -->
+      </main>
+      <footer>
+        <input class="footer-button" id="reset-button" type="button" value="Factory reset"/>
+        <input class="footer-button" id="save-button" type="button" value="Save"/>        
+      </footer>
     </div>
   </body>
 </html>
-
 
 )=====";

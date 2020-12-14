@@ -28,12 +28,12 @@ void SensorThermometer::resetSettings()
 
 String SensorThermometer::getSensorInformationHtml()
 {
-
+    return sensorThermometerRoot;
 }
 
 String SensorThermometer::getConfigurationPageHtml()
 {
-
+    return sensorThermometerSettings;
 }
 
 void SensorThermometer::updateSettings(String settings)
@@ -63,8 +63,7 @@ void SensorThermometer::updateSettings(String settings)
         prefs.putString(SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS, this->settingAddressValue);
 
         prefs.end();
-    }
-    
+    }    
 }
 
 String SensorThermometer::getValues()

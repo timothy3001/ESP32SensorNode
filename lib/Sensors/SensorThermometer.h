@@ -9,6 +9,8 @@
 #include <DallasTemperature.h>
 #include <Preferences.h>
 #include <HelperFunctions.h>
+#include <SensorThermometerRoot.h>
+#include <SensorThermometerSettings.h>
 
 class SensorThermometer : public SensorBase
 {
