@@ -70,7 +70,7 @@ void setup()
     }
     Serial.println("WiFi successfully set up!");
 
-    if (generalSettings->sensorType == None)
+    if (generalSettings->firstRun)
     {
         Serial.println("Setting up web server for normal operation...");
         webServer = new WebServerSensor(sensor, generalSettings);

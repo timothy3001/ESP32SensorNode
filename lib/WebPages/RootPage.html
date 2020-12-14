@@ -59,6 +59,11 @@
 
       window.onload = () => {
         updateTitle();
+
+        if (typeof sensorOnload == 'function') {
+          sensorOnload();
+        }
+
         window.setTimeout(update, 1000);
       }
 

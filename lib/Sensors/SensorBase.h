@@ -38,6 +38,9 @@ class SensorBase
          * You should implement this function in the HTML code to update the 
          * displaying when new sensor values arrived.
          * 
+         * At window.onload the settings page will call 'sensorOnload()' if available. Use
+         * it to set up stuff on page loading.
+         * 
          * @return String that contains the sensor specific HTML code to be embedded.
          */
         virtual String getSensorInformationHtml();
@@ -49,16 +52,19 @@ class SensorBase
          * 
          * The settings page has some JavaScript code which loads the current settings.
          * After loading of the settings the function 
-         * 'displayCurrentSettings(string settings)' will be called containing current
+         * 'displayCurrentSensorSettings(string settings)' will be called containing current
          * sensor settings. You should implement this function to display the current
          * sensor settings in the settings page.
          * 
          * In addition to this you also must implement the javascript function 
          * 'getSensorSettings()' which should return the sensor specific settings the 
-         * user entered into the fields. It needs to be formatted as JSON. This function 
+         * user entered into the fields. It needs to a JSON object. This function 
          * should also check whether the values entered by the user are valid. If not, 
          * return 'undefined' to prevent the save function from executing. You can use
          * window.alert to tell the user which mistake was made.
+         * 
+         * At window.onload the settings page will call 'sensorOnload()' if available. Use
+         * it to set up stuff on page loading.
          * 
          * @return String that contains the sensor specific HTML code to be embedded.
          */
@@ -89,7 +95,7 @@ class SensorBase
         /**
          * Called by the webserver to retrieve the current sensor specific settings. 
          * These can be used to display the current settings in the web view. 
-         * The javascript 'displayCurrentSettings(settings)' will be called. If that
+         * The javascript 'displayCurrentSensorSettings(settings)' will be called. If that
          * function is implemented it will be given all current settings.
          * 
          * Data should be formatted as a single JSON object.

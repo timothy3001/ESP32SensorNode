@@ -20,7 +20,7 @@ class GeneralSettings
         bool passiveOperation;
         bool reportingBatteryActive;
         String reportingBatteryAddress;
-        SensorType sensorType;
+        bool firstRun;
 
     private:
         String getShortMac();

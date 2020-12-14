@@ -154,7 +154,37 @@
       }
 
       function loadSettings() {
-        updateInputsActivation();
+        var xlr = new XMLHttpRequest();
+        xlr.open('GET', '/api/settings', false);
+        xlr.send(null);
+        
+        xlr.onreadystatechange = () => {
+          if (this.readystate == 4 && this.status == 200) {
+            var jsonSettings = JSON.parse(xlr.responseText);
+            displayCurrentSettings(jsonSettings);
+            updateInputsActivation();
+          }
+        }
+      }
+
+      function displayCurrentSettings(settings) {
+        var general = settings['general'];
+        var sensor = settings['sensor'];
+
+        inputSensorName.value = sensor['name'];
+        inputActivateReporting.checked = sensor['activateRep'];
+        inputBaseAddress.value = sensor['baseAdd'];
+        inputReportingInterval.value = sensor['intervalSecs'];
+        passive.checked = sensor['passive'];
+        inputBatteryReporting.checked = sensor['activateRepBat'];
+        inputBatteryReportingAddress.value = sensor['batAdd'];
+
+        if (typeof(displayCurrentSensorSettings) != 'function') {
+          window.alert('Sensor implementation error: "displayCurrentSensorSettings()" not implemented!');
+          return;
+        }
+
+        displayCurrentSensorSettings(sensor);
       }
 
       function getAndCheckGeneralSettings() {

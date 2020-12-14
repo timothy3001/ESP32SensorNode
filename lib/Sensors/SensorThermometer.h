@@ -25,7 +25,7 @@ class SensorThermometer : public SensorBase
 
     private:
         const char* SENSOR_THERMOMETER_PREF_DATA_PIN = "dataPin";
-        const char* SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS = "address";
+        const char* SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS = "tempAdd";
 
         int settingDataPinSensor;
         String settingAddressValue;        

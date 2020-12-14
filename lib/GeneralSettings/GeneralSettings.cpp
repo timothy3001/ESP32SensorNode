@@ -14,7 +14,7 @@ void GeneralSettings::initialize()
     this->passiveOperation = prefs.getBool(GENERAL_PREF_PASSIVE, false);
     this->reportingBatteryActive = prefs.getBool(GENERAL_PREF_ACTIVATE_REPORTING_BAT, false);
     this->reportingBatteryAddress = prefs.getString(GENERAL_PREF_ACTIVATE_REPORTING_BAT, String(""));
-    this->sensorType = (SensorType) prefs.getInt(GENERAL_PREF_SENSOR_TYPE, 0);
+    this->firstRun = prefs.getBool(GENERAL_PREF_FIRST_RUN, true);
 
     prefs.end();
 }
@@ -34,7 +34,7 @@ void GeneralSettings::save()
     prefs.putBool(GENERAL_PREF_PASSIVE, this->passiveOperation);
     prefs.putBool(GENERAL_PREF_ACTIVATE_REPORTING_BAT, this->reportingBatteryActive);
     prefs.putString(GENERAL_PREF_BAT_REPORTING_ADDRESS, this->reportingBatteryAddress);
-    prefs.putInt(GENERAL_PREF_SENSOR_TYPE, (int)this->sensorType);
+    prefs.putBool(GENERAL_PREF_FIRST_RUN, false);
 
     prefs.end();
 

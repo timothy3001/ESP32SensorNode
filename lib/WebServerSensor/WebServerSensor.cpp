@@ -61,7 +61,6 @@ void WebServerSensor::handleGetSettings(AsyncWebServerRequest *request)
     settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_BAT_REPORTING_ADDRESS] = generalSettings->reportingBatteryAddress;
     settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_REPORTING_INTERVAL_SECS] = generalSettings->intervalSeconds;
     settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_PASSIVE] = generalSettings->passiveOperation;
-    settingsDoc[GENERAL_PREFS_NAME][GENERAL_PREF_SENSOR_TYPE] = (int)generalSettings->sensorType;
 
     DynamicJsonDocument sensorSettingsDoc(1024);
     String sensorSettingsJson = sensor->getSettings();
@@ -129,8 +128,6 @@ void WebServerSensor::updateGeneralSettings(JsonObject generalSettingsObj)
         generalSettings->reportingBatteryActive = generalSettingsObj[GENERAL_PREF_ACTIVATE_REPORTING_BAT].as<bool>();
     if (generalSettingsObj.containsKey(GENERAL_PREF_REPORTING_INTERVAL_SECS))
         generalSettings->intervalSeconds = generalSettingsObj[GENERAL_PREF_REPORTING_INTERVAL_SECS].as<int>();
-    if (generalSettingsObj.containsKey(GENERAL_PREF_SENSOR_TYPE))
-        generalSettings->sensorType = (SensorType)generalSettingsObj[GENERAL_PREF_SENSOR_TYPE].as<int>();
 
     generalSettings->save();
 }
