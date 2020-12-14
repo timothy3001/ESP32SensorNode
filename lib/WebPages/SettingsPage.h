@@ -3,7 +3,6 @@
 const char settingsPage[] PROGMEM = R"=====(
 <!DOCTYPE html>
 <html>
-
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="app-title">Settings SensorNode</title>
@@ -125,6 +124,10 @@ const char settingsPage[] PROGMEM = R"=====(
         inputActivateReporting.addEventListener('click', updateInputsActivation);
         inputBatteryReporting.addEventListener('click', updateInputsActivation);
         
+        if (typeof sensorOnload == 'function') {
+          sensorOnload();
+        }
+
         loadSettings();
       }
 
@@ -147,6 +150,7 @@ const char settingsPage[] PROGMEM = R"=====(
           inputBaseAddress.disabled = false;
           inputReportingInterval.disabled = false;
           inputPassiveReporting.disabled = false;
+          inputBatteryReporting.disabled = false;
         }        
 
         if (inputBatteryReporting.checked) {
@@ -159,29 +163,30 @@ const char settingsPage[] PROGMEM = R"=====(
 
       function loadSettings() {
         var xlr = new XMLHttpRequest();
-        xlr.open('GET', '/api/settings', false);
-        xlr.send(null);
+        xlr.open('GET', '/api/settings', true);
         
         xlr.onreadystatechange = () => {
-          if (this.readystate == 4 && this.status == 200) {
+          if (xlr.readyState == 4 && xlr.status == 200) {
             var jsonSettings = JSON.parse(xlr.responseText);
             displayCurrentSettings(jsonSettings);
             updateInputsActivation();
           }
         }
+        
+        xlr.send(null);
       }
 
       function displayCurrentSettings(settings) {
         var general = settings['general'];
         var sensor = settings['sensor'];
 
-        inputSensorName.value = sensor['name'];
-        inputActivateReporting.checked = sensor['activateRep'];
-        inputBaseAddress.value = sensor['baseAdd'];
-        inputReportingInterval.value = sensor['intervalSecs'];
-        passive.checked = sensor['passive'];
-        inputBatteryReporting.checked = sensor['activateRepBat'];
-        inputBatteryReportingAddress.value = sensor['batAdd'];
+        inputSensorName.value = general['name'];
+        inputActivateReporting.checked = general['activateRep'];
+        inputBaseAddress.value = general['baseAdd'];
+        inputReportingInterval.value = general['intervalSecs'];
+        inputPassiveReporting.checked = general['passive'];
+        inputBatteryReporting.checked = general['activateRepBat'];
+        inputBatteryReportingAddress.value = general['batAdd'];
 
         if (typeof(displayCurrentSensorSettings) != 'function') {
           window.alert('Sensor implementation error: "displayCurrentSensorSettings()" not implemented!');
@@ -217,7 +222,7 @@ const char settingsPage[] PROGMEM = R"=====(
           'intervalSecs': parseInt(inputReportingInterval.value),
           'passive': inputPassiveReporting.checked,
           'activateRepBat': inputBatteryReporting.checked,
-          'batAdd': inputBatteryReportingAddress
+          'batAdd': inputBatteryReportingAddress.value
         };
 
         return generalSettingsObj;
@@ -229,7 +234,7 @@ const char settingsPage[] PROGMEM = R"=====(
         if (!doSave)
           return;
 
-        if (typeof updateValues !== "function") {
+        if (typeof getSensorSettings !== "function") {
           window.alert('Sensor implementation error: function "getSensorSettings()" does not exist!');
           return;
         }
@@ -246,16 +251,17 @@ const char settingsPage[] PROGMEM = R"=====(
         };
 
         var xlr = new XMLHttpRequest();
-        xlr.open('POST', '/api/settings', false);
-        xlr.send(settingsObj);
+        xlr.open('POST', '/api/settings', true);
         
         xlr.onreadystatechange = () => {
-          if (this.readystate == 4 && this.status != 200) {
+          if (xlr.readyState == 4 && xlr.status != 200) {
             window.alert('Could not save settings!');
-          } else if (this.readystate == 4 && this.status == 200) {
+          } else if (xlr.readyState == 4 && xlr.status == 200) {
             window.alert('Settings saved! Restarting microcontroller now.');
           }
-        }   
+        }
+        
+        xlr.send(JSON.stringify(settingsObj));
       }
 
       function reset() {
@@ -265,7 +271,7 @@ const char settingsPage[] PROGMEM = R"=====(
           return;   
         
         var xlr = new XMLHttpRequest();
-        xlr.open('POST', '/api/resetSettings', false);
+        xlr.open('POST', '/api/resetSettings', true);
         xlr.send(null);
       }
 

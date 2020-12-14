@@ -5,6 +5,7 @@
 #include <Constants.h>
 #include <GeneralSettings.h>
 #include <HelperFunctions.h>
+#include <SensorThermometer.h>
 
 // Define what kind of sensor you want to use. 
 // Available options: Thermometer, MoisturePlants
@@ -34,7 +35,7 @@ void executeReporting();
 void setup()
 {
     // Initialize and configuing analog readings
-    Serial.begin(9600);
+    Serial.begin(115200);
     analogSetAttenuation(ADC_11db);
     analogReadResolution(11);
 
@@ -63,7 +64,7 @@ void setup()
 
     // Connecting to WiFi. If WiFi is not set up at all the WiFi setup is started
     Serial.println("Setting up wifi...");
-    if (!EspWifiSetup::setup(String("Sensor-") + generalSettings->sensorName, false, generalSettings->passiveOperation) && 
+    if (!EspWifiSetup::setup(generalSettings->sensorName, false, generalSettings->passiveOperation) && 
         generalSettings->passiveOperation)
     {
         initiateDeepSleepForReporting();
@@ -72,10 +73,10 @@ void setup()
 
     if (generalSettings->firstRun)
     {
-        Serial.println("Setting up web server for normal operation...");
+        Serial.println("Setting up web server for configuration...");
         webServer = new WebServerSensor(sensor, generalSettings);
         webServer->startWebServer(true);
-        Serial.println("Webserver set up for normal operation!");        
+        Serial.println("Webserver set up for configuration!");        
     }
     else if (generalSettings->passiveOperation)
     {
@@ -89,10 +90,6 @@ void setup()
     }
     else
     {
-        Serial.println("Starting sensor...");
-        sensor->begin();
-        Serial.println("Sensor started!");
-
         Serial.println("Setting up web server for normal operation...");
         webServer = new WebServerSensor(sensor, generalSettings);
         webServer->startWebServer();
@@ -141,21 +138,20 @@ void checkForReset()
 
 void initSensor() 
 {
-    // switch(settingSensorType)
-    // {
-    //     case Thermometer:
-    //         sensor = new SensorThermometer();
-    //         break;
-    //     case Moisture:
-    //         sensor = new SensorMoisture();
-    //         break;
-    // }
+    switch(SENSOR_KIND)
+    {
+        case Thermometer:
+            sensor = new SensorThermometer();
+            break;
+    }
+
+    sensor->begin();
 }
 
 unsigned long lastReportingChecked = 0;
 void handleReporting()
 {
-    if (generalSettings->reportingActive)
+    if (!generalSettings->firstRun && generalSettings->reportingActive)
     {
         unsigned long now = millis();
         if (lastReportingChecked == 0 || lastReportingChecked + generalSettings->intervalSeconds * 1000 < now || lastReportingChecked > now)

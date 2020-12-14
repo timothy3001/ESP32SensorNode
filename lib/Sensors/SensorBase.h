@@ -23,6 +23,10 @@ class SensorBase
          * and not in the constructor.
          * 
          * It is recommended to get the first reading of the sensor here.
+         * 
+         * If settings are not valid, make sure to check that first. This function will 
+         * be called before configuration page loaded. 
+         * 
          */
         virtual void begin();
 
@@ -86,7 +90,7 @@ class SensorBase
          * This function should be able to deliver the values every second.
          * Make sure, that you don't need too long to get the new sensor value.
          * 
-         * Data should be formatted as JSON.
+         * Data should be (preferably) formatted as JSON but it does not have to be.
          * 
          * @return JSON as String containing needed values.
          */

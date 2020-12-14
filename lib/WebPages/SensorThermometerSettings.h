@@ -24,7 +24,7 @@ const char sensorThermometerSettings[] PROGMEM = R"=====(
       window.alert('Please enter a valid pin you will use for DS18B20 OneWire connection!');
       return undefined;
     }
-    if (inputSensorAddress.value) {
+    if (!inputSensorAddress.value) {
       window.alert('Please enter a valid subaddress for the thermometer to send values to!');
     }
 
@@ -44,6 +44,6 @@ const char sensorThermometerSettings[] PROGMEM = R"=====(
 </div>
 <div class="setting-container">
   <label>Subaddress temperature value: </label>
-  <input type="number" class="number-input" id="inputSensorAddress" disabled />
+  <input type="text" id="inputSensorAddress" disabled />
 </div>
 )=====";

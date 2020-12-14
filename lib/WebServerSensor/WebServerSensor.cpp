@@ -31,14 +31,14 @@ void WebServerSensor::startWebServer(bool onlySettings)
             this->handleUpdateSettings(request, data, len, index, total); 
         });
     webServer->on("/api/resetSettings", HTTP_POST, [&](AsyncWebServerRequest *request) { this->handleResetSettings(request); });
-    webServer->begin();    
+    webServer->begin();
 }
 
 void WebServerSensor::handleRootPage(AsyncWebServerRequest *request)
 {
     AsyncResponseStream *response = request->beginResponseStream("text/html");
     response->setCode(200);
-    response->printf(rootPage, generalSettings->sensorName, sensor->getSensorInformationHtml());
+    response->printf(rootPage, generalSettings->sensorName.c_str(), sensor->getSensorInformationHtml().c_str());
     request->send(response);
 }
 
@@ -46,7 +46,7 @@ void WebServerSensor::handleSettingsPage(AsyncWebServerRequest *request)
 {
     AsyncResponseStream *response = request->beginResponseStream("text/html");
     response->setCode(200);
-    response->printf(settingsPage, generalSettings->sensorName, sensor->getConfigurationPageHtml());
+    response->printf(settingsPage, generalSettings->sensorName.c_str(), sensor->getConfigurationPageHtml().c_str());
     request->send(response);
 }
 
@@ -66,7 +66,7 @@ void WebServerSensor::handleGetSettings(AsyncWebServerRequest *request)
     String sensorSettingsJson = sensor->getSettings();
     deserializeJson(sensorSettingsDoc, sensorSettingsJson);
 
-    settingsDoc[SENSOR_PREFS_NAME] = sensorSettingsDoc.to<JsonObject>();
+    settingsDoc[SENSOR_PREFS_NAME] = sensorSettingsDoc.as<JsonObject>();
 
     String json;
     serializeJson(settingsDoc, json);
@@ -140,9 +140,16 @@ void WebServerSensor::handleGetValues(AsyncWebServerRequest *request)
 
 void WebServerSensor::handleResetSettings(AsyncWebServerRequest *request)
 {
+    Serial.println("Reset requested...");
+
     generalSettings->resetSettings();
     sensor->resetSettings();
     EspWifiSetup::resetSettings();
+
+    Serial.println("Reset done! rebooting...");
     
     request->send(200, "text/plain", "");
+    delay(500);
+
+    ESP.restart();
 }

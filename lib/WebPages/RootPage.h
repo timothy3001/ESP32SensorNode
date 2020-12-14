@@ -80,16 +80,17 @@ const char rootPage[] PROGMEM = R"=====(
 
       function update() {
         var xlr = new XMLHttpRequest();
-        xlr.open('GET', '/api/values', false);
-        xlr.send(null);
+        xlr.open('GET', '/api/values', true);
         
         xlr.onreadystatechange = () => {
-          if (this.readystate == 4 && this.status == 200) {
-            if (typeof updateValues == "function") {
-              updateValues(this.responsetext);
+          if (xlr.readyState == 4 && xlr.status == 200) {
+            if (typeof displaySensorValues == "function") {
+              displaySensorValues(xlr.responseText);
             }
           }
         }
+        
+        xlr.send(null);
 
         window.setTimeout(update, 1000);
       }

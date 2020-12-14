@@ -10,10 +10,10 @@ void GeneralSettings::initialize()
     this->sensorName = prefs.getString(GENERAL_PREF_SENSOR_NAME, defaultName);
     this->reportingActive = prefs.getBool(GENERAL_PREF_ACTIVATE_REPORTING, false);
     this->baseAddress = prefs.getString(GENERAL_PREF_BASE_ADDRESS, String(""));
-    this->intervalSeconds = prefs.getUInt(GENERAL_PREF_REPORTING_INTERVAL_SECS, 1800);
+    this->intervalSeconds = prefs.getInt(GENERAL_PREF_REPORTING_INTERVAL_SECS, 1800);
     this->passiveOperation = prefs.getBool(GENERAL_PREF_PASSIVE, false);
     this->reportingBatteryActive = prefs.getBool(GENERAL_PREF_ACTIVATE_REPORTING_BAT, false);
-    this->reportingBatteryAddress = prefs.getString(GENERAL_PREF_ACTIVATE_REPORTING_BAT, String(""));
+    this->reportingBatteryAddress = prefs.getString(GENERAL_PREF_BAT_REPORTING_ADDRESS, String(""));
     this->firstRun = prefs.getBool(GENERAL_PREF_FIRST_RUN, true);
 
     prefs.end();

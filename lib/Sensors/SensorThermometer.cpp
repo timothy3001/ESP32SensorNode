@@ -9,6 +9,8 @@ void SensorThermometer::begin()
         oneWire = new OneWire(settingDataPinSensor);
         tempSensor = new DallasTemperature(oneWire);
 
+        tempSensor->begin();
+
         this->updateTemperature();
     }
     else
@@ -145,6 +147,8 @@ void SensorThermometer::updateTemperature()
         }
         tries++;
     }
+
+    this->lastUpdate = millis();
 }
 
 bool SensorThermometer::isTempValid(float temperature)
@@ -176,4 +180,15 @@ void SensorThermometer::logMessage(String msg)
 String SensorThermometer::getNamePrefix()
 {
     return String("Thermometer");
+}
+
+void SensorThermometer::loop() 
+{
+    unsigned long now = millis();
+
+    if (lastUpdate + 5000 < now || lastUpdate > now) 
+    {
+        if (this->validSettings)
+            this->updateTemperature();
+    }
 }

@@ -24,6 +24,7 @@ class SensorThermometer : public SensorBase
         String getSettings();
         void executeReporting(String baseAddress);
         String getNamePrefix();
+        void loop();
 
     private:
         const char* SENSOR_THERMOMETER_PREF_DATA_PIN = "dataPin";
@@ -34,6 +35,7 @@ class SensorThermometer : public SensorBase
 
         float currentTemperature = -127.0f;
         bool validSettings = false;
+        unsigned long lastUpdate = 0;
 
         OneWire *oneWire = NULL;
         DallasTemperature *tempSensor = NULL; 
