@@ -16,13 +16,14 @@
   }
 
   function getSensorSettings() {
-    if (inputSensorPin.value < 0 && inputSensorPin > 42)
+    if (inputSensorPin.value < 0 || inputSensorPin.value > 42)
     {
       window.alert('Please enter a valid pin you will use for DS18B20 OneWire connection!');
       return undefined;
     }
     if (!inputSensorAddress.value) {
       window.alert('Please enter a valid subaddress for the thermometer to send values to!');
+      return undefined;
     }
 
     var sensorSettingsObj = {
