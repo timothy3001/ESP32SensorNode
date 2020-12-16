@@ -12,6 +12,53 @@ void SensorCjmcu8128::begin()
         {
             this->runDeviceScan();
         }
+
+        // Setting up CCS811 sensor
+        this->ccs811 = new CCS811(CCS811_ADDRESS);
+        this->ccs811Ready = ccs811->begin(Wire);
+        if (!ccs811Ready)
+        {
+            logMessage("ERROR - Could not setup CCS811, please check wiring!");
+        }
+        else
+        {
+            this->executeReadingCcs811();
+        }        
+    }
+}
+
+void SensorCjmcu8128::executeReadingCcs811() 
+{
+    unsigned long firstTryReading = millis();
+
+    while(firstTryReading + 20000 > millis())
+    {
+        delay(20);
+
+        if (this->ccs811->dataAvailable())
+        {
+            this->ccs811->readAlgorithmResults();
+
+            delay(20);
+
+            this->ccs811Tvoc = this->ccs811->getTVOC();
+            this->ccs811Co2 = this->ccs811->getCO2();
+
+            // Sensor delivers useful readings after 3 readings
+            if (this->ccs811Co2 != 0)
+            {
+                logMessage(
+                    String("Reading CCS811 -") +
+                    String(" TVOC: ") + String(this->ccs811Tvoc) + 
+                    String(" CO2: " + String(this->ccs811Co2))
+                );
+            }
+        }
+    }    
+
+    if (firstTryReading + 20000 < millis())
+    {
+        logMessage("ERROR - Could not read data from CCS811 sensor!");
     }
 }
 
@@ -130,6 +177,8 @@ bool SensorCjmcu8128::readSettings()
 
 void SensorCjmcu8128::runDeviceScan()
 {
+    Wire.begin(settingSdaPin, settingSclPin);
+
     // See https://create.arduino.cc/projecthub/abdularbi17/how-to-scan-i2c-address-in-arduino-eaadda 
     byte error;
     byte address;
