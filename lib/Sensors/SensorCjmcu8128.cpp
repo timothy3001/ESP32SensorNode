@@ -18,20 +18,41 @@ void SensorCjmcu8128::begin()
         this->ccs811Ready = ccs811->begin(Wire);
         if (!ccs811Ready)
         {
-            logMessage("ERROR - Could not setup CCS811, please check wiring!");
-        }
-        else
+            logMessage("ERROR - Could not setup CCS811, please check wiring and address!");
+        }      
+
+        // Setting up BMP280 sensor
+        this->bmp280 = new BME280();
+        this->bmp280->setI2CAddress(BMP280_ADDRESS);
+        this->bmp280Ready = this->bmp280->beginI2C(Wire);
+        if(!bmp280Ready)
         {
-            this->executeReadingCcs811();
-        }        
+            logMessage("ERROR - could setup BMP280, please check wiring and address!");
+        }
+
+        // Setting up HDC1080
+        this->hdc1080 = new ClosedCube_HDC1080();
+        this->hdc1080->begin(HDC1080_ADDRESS);
+
+        this->updateReadings();
     }
 }
 
-void SensorCjmcu8128::executeReadingCcs811() 
+void SensorCjmcu8128::updateReadings()
+{
+    if(this->ccs811Ready)
+        this->updateReadingCcs811();
+    if(this->hdc1080Ready)
+        this->updateReadingHdc1080();
+    if (this->bmp280Ready)
+        this->updateReadingBmp280();
+}
+
+void SensorCjmcu8128::updateReadingCcs811() 
 {
     unsigned long firstTryReading = millis();
 
-    while(firstTryReading + 20000 > millis())
+    while(firstTryReading + 10000 > millis())
     {
         delay(20);
 
@@ -44,7 +65,8 @@ void SensorCjmcu8128::executeReadingCcs811()
             this->ccs811Tvoc = this->ccs811->getTVOC();
             this->ccs811Co2 = this->ccs811->getCO2();
 
-            // Sensor delivers useful readings after 3 readings
+            // Sensor delivers useful readings after 3 readings. So let's wait
+            // for the useful readings
             if (this->ccs811Co2 != 0)
             {
                 logMessage(
@@ -56,10 +78,34 @@ void SensorCjmcu8128::executeReadingCcs811()
         }
     }    
 
-    if (firstTryReading + 20000 < millis())
+    if (firstTryReading + 10000 < millis())
     {
         logMessage("ERROR - Could not read data from CCS811 sensor!");
     }
+}
+
+void SensorCjmcu8128::updateReadingBmp280()
+{
+    this->bmp280Temperature = this->bmp280->readTempC();
+    this->bmp280Pressure = this->bmp280->readFloatPressure();
+
+    logMessage(
+        String("Reading BMP280 -") +
+        String(" Temperature: ") + String(this->bmp280Temperature) +
+        String(" Pressure: ") + String(this->bmp280Pressure)
+    );
+}
+
+void SensorCjmcu8128::updateReadingHdc1080()
+{
+    this->hdc1080Temperature = (float)this->hdc1080->readTemperature();
+    this->hdc1080Humidity = (float)this->hdc1080->readHumidity();
+
+    logMessage(
+        String("Reading HDC1080 -") +
+        String(" Temperature: ") + String(this->hdc1080Temperature) +
+        String(" Humidity: ") + String(this->hdc1080Humidity)
+    );
 }
 
 void SensorCjmcu8128::executeReporting(String baseAddress)
@@ -69,7 +115,13 @@ void SensorCjmcu8128::executeReporting(String baseAddress)
 
 void SensorCjmcu8128::loop()
 {
-    
+    unsigned long now = millis();
+
+    if (lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || lastUpdate > now) 
+    {
+        if (this->validSettings)
+            this->updateReadings();
+    }
 }
 
 String SensorCjmcu8128::getConfigurationPageHtml() 

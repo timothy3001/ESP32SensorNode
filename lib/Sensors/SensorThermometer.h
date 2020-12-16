@@ -12,6 +12,12 @@
 #include <SensorThermometerRoot.h>
 #include <SensorThermometerSettings.h>
 
+/**
+ * 
+ * WARNING: Use this implementation only for normal weather conditions in degrees celcius.
+ * Temperatures below -30°C or higher than 57°C are considered invalid readings. 
+ * 
+ */
 class SensorThermometer : public SensorBase
 {
     public:
