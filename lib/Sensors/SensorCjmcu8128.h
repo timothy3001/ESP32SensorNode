@@ -12,6 +12,7 @@
 #include <SparkFunCCS811.h>
 #include <SparkFunBME280.h>
 #include <ClosedCube_HDC1080.h>
+#include <HelperFunctions.h>
 
 /**
  * 
@@ -44,16 +45,27 @@ class SensorCjmcu8128 : public SensorBase
         void updateSettings(String settings);
     
     private:
-        const int CONTINOUS_UPDATE_INTERVAL = 10 * 1000;
+        const int CONTINOUS_UPDATE_INTERVAL = 10 * 1000; // 10 seconds
+        const unsigned long CCS811_BURN_IN_TIME =  1000 * 60 * 20; // 20 minutes
+
         const char* SENSOR_CJMCU8128_PREF_SDA_PIN = "sdaPin";
         const char* SENSOR_CJMCU8128_PREF_SCL_PIN = "sclPin";
         const char* SENSOR_CJMCU8128_PREF_SCAN_DEVICES = "scanDevs";
+        const char* SENSOR_CJMCU8128_PREF_CCS811_BASELINE = "ccsBase";
+        const char* SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS = "ccsCo2";
+        const char* SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS = "ccsTvoc";
+        const char* SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS = "hdcTemp";
+        const char* SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS = "hdcHum";
+        const char* SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS = "bmpTemp";
+        const char* SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS = "bmpPres";
+
         const int CCS811_ADDRESS = 0x5A;
         const int HDC1080_ADDRESS = 0x40;
         const int BMP280_ADDRESS = 0x76;
 
         void logMessage(String msg);
         bool readSettings();
+        void saveSettings();
         void runDeviceScan();
         void updateReadings();
         void updateReadingCcs811();
@@ -66,6 +78,13 @@ class SensorCjmcu8128 : public SensorBase
         int settingSdaPin;
         int settingSclPin;
         bool settingScanDevices;
+        int settingCcs811Baseline;
+        String settingCcs811Co2SubAddress;
+        String settingCcs811TvocSubAddress;
+        String settingHdc1080TempSubAddress;
+        String settingHdc1080HumiditySubAddress;
+        String settingBmp280TempSubAddress;
+        String settingBmp280PressureSubAddress;
 
         bool validSettings = false;
         CCS811 *ccs811;

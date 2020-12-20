@@ -20,6 +20,10 @@ void SensorCjmcu8128::begin()
         {
             logMessage("ERROR - Could not setup CCS811, please check wiring and address!");
         }      
+        else if (this->settingCcs811Baseline >= 0)
+        {
+            this->ccs811->setBaseline(this->settingCcs811Baseline);
+        }
 
         // Setting up BMP280 sensor
         this->bmp280 = new BME280();
@@ -66,7 +70,7 @@ void SensorCjmcu8128::updateReadingCcs811()
             this->ccs811Co2 = this->ccs811->getCO2();
 
             // Sensor delivers useful readings after 3 readings. So let's wait
-            // for the useful readings
+            // for the 4th, the useful reading
             if (this->ccs811Co2 != 0)
             {
                 logMessage(
@@ -117,10 +121,16 @@ void SensorCjmcu8128::loop()
 {
     unsigned long now = millis();
 
-    if (lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || lastUpdate > now) 
+    if (lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || lastUpdate > now && this->validSettings)
     {
-        if (this->validSettings)
-            this->updateReadings();
+        this->updateReadings();
+        
+        if (this->settingCcs811Baseline == -1 && this->ccs811Ready && now > CCS811_BURN_IN_TIME)
+        {
+            this->settingCcs811Baseline = this->ccs811->getBaseline();
+            logMessage(String("Set CCS811 baseline to: ") + String(this->settingCcs811Baseline));
+            this->saveSettings();
+        }
     }
 }
 
@@ -141,8 +151,31 @@ String SensorCjmcu8128::getNamePrefix()
 
 String SensorCjmcu8128::getValues()
 {
-    // ToDo: Implement
-    return String("");
+    DynamicJsonDocument doc(1024);
+
+    if (!this->validSettings)
+        doc["error"] = String("Could not get current values. Settings are invalid!");    
+    else
+    {
+        if (this->ccs811Co2 >= 0)
+            doc['co2'] = this->ccs811Co2;
+        if (this->ccs811Tvoc >= 0)
+            doc['tvoc'] = this->ccs811Tvoc;
+        if (this->isTempValid(this->hdc1080Temperature))
+            doc['tempHdc1080'] = this->hdc1080Temperature;
+        if (this->hdc1080Humidity >= 0.0f)
+            doc['humidity'] = this->hdc1080Humidity;
+        if (this->isTempValid(this->bmp280Temperature))
+            doc['tempBmp280'] = this->bmp280Temperature;
+        if (this->bmp280Pressure >= 0.0f)
+            doc['pressure'] = this->bmp280Pressure;
+    }
+    
+    
+    String result;
+    serializeJson(doc, result);
+
+    return result;
 }
 
 String SensorCjmcu8128::getSettings()
@@ -152,6 +185,13 @@ String SensorCjmcu8128::getSettings()
     doc[SENSOR_CJMCU8128_PREF_SDA_PIN] = settingSdaPin;
     doc[SENSOR_CJMCU8128_PREF_SCL_PIN] = settingSclPin;
     doc[SENSOR_CJMCU8128_PREF_SCAN_DEVICES] = settingScanDevices;
+    doc[SENSOR_CJMCU8128_PREF_CCS811_BASELINE] = settingCcs811Baseline;
+    doc[SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS] = settingCcs811Co2SubAddress;
+    doc[SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS] = settingCcs811TvocSubAddress;
+    doc[SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS] = settingHdc1080HumiditySubAddress;
+    doc[SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS] = settingHdc1080TempSubAddress;
+    doc[SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS] = settingBmp280TempSubAddress;
+    doc[SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS] = settingBmp280PressureSubAddress;
 
     String result;
     serializeJson(doc, result);
@@ -184,25 +224,66 @@ void SensorCjmcu8128::updateSettings(String settings)
             this->settingSclPin = doc[SENSOR_CJMCU8128_PREF_SCL_PIN].as<int>();
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_SCAN_DEVICES))
             this->settingScanDevices = doc[SENSOR_CJMCU8128_PREF_SCAN_DEVICES].as<bool>();
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_BASELINE))
+            this->settingCcs811Baseline = doc[SENSOR_CJMCU8128_PREF_CCS811_BASELINE].as<int>();
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS))
+        {
+            String value = doc[SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS].as<String>();
+            HelperFunctions::stripFirstSlash(value);
+            this->settingCcs811Co2SubAddress = value;
+        }
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS))
+        {
+            String value = doc[SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS].as<String>();
+            HelperFunctions::stripFirstSlash(value);
+            this->settingCcs811TvocSubAddress = value;
+        }
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS))
+        {
+            String value = doc[SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS].as<String>();
+            HelperFunctions::stripFirstSlash(value);
+            this->settingHdc1080TempSubAddress = value;
+        }
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS))
+        {
+            String value = doc[SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS].as<String>();
+            HelperFunctions::stripFirstSlash(value);
+            this->settingHdc1080HumiditySubAddress = value;
+        }
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS))
+        {
+            String value = doc[SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS].as<String>();
+            HelperFunctions::stripFirstSlash(value);
+            this->settingBmp280TempSubAddress = value;
+        }
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS))
+        {
+            String value = doc[SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS].as<String>();
+            HelperFunctions::stripFirstSlash(value);
+            this->settingBmp280PressureSubAddress = value;
+        }
 
-        // if (doc.containsKey(SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS))
-        // {
-        //     String value = doc[SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS].as<String>();
-        //     HelperFunctions::stripFirstSlash(value);
-        //     this->settingAddressValue = value;
-        // }        
-        
-        Preferences prefs;
-        prefs.begin(SENSOR_PREFS_NAME, false);
-
-        prefs.putInt(SENSOR_CJMCU8128_PREF_SDA_PIN, this->settingSdaPin);
-        prefs.putInt(SENSOR_CJMCU8128_PREF_SCL_PIN, this->settingSclPin);
-        prefs.putBool(SENSOR_CJMCU8128_PREF_SCAN_DEVICES, this->settingScanDevices);
-
-        // prefs.putString(SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS, this->settingAddressValue);
-
-        prefs.end();
+        this->saveSettings();
     }
+}
+
+void SensorCjmcu8128::saveSettings()
+{
+    Preferences prefs;
+    prefs.begin(SENSOR_PREFS_NAME, false);
+
+    prefs.putInt(SENSOR_CJMCU8128_PREF_SDA_PIN, this->settingSdaPin);
+    prefs.putInt(SENSOR_CJMCU8128_PREF_SCL_PIN, this->settingSclPin);
+    prefs.putBool(SENSOR_CJMCU8128_PREF_SCAN_DEVICES, this->settingScanDevices);
+    prefs.putInt(SENSOR_CJMCU8128_PREF_CCS811_BASELINE, this->settingCcs811Baseline);
+    prefs.putString(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS, this->settingCcs811Co2SubAddress);
+    prefs.putString(SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS, this->settingCcs811TvocSubAddress);
+    prefs.putString(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS, this->settingHdc1080TempSubAddress);
+    prefs.putString(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS, this->settingHdc1080HumiditySubAddress);
+    prefs.putString(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS, this->settingBmp280TempSubAddress);
+    prefs.putString(SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS, this->settingBmp280PressureSubAddress);
+
+    prefs.end();
 }
 
 void SensorCjmcu8128::logMessage(String msg)
@@ -218,6 +299,13 @@ bool SensorCjmcu8128::readSettings()
     this->settingSdaPin = prefs.getInt(SENSOR_CJMCU8128_PREF_SDA_PIN, -1);
     this->settingSclPin = prefs.getInt(SENSOR_CJMCU8128_PREF_SCL_PIN, -1);
     this->settingScanDevices = prefs.getBool(SENSOR_CJMCU8128_PREF_SCAN_DEVICES, true);
+    this->settingCcs811Baseline = prefs.getInt(SENSOR_CJMCU8128_PREF_CCS811_BASELINE, -1);
+    this->settingCcs811Co2SubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS, String(""));
+    this->settingCcs811TvocSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS, String(""));
+    this->settingHdc1080TempSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS, String(""));
+    this->settingHdc1080HumiditySubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS, String(""));
+    this->settingBmp280TempSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS, String(""));
+    this->settingBmp280PressureSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS, String(""));
 
     prefs.end();
 
@@ -271,4 +359,9 @@ void SensorCjmcu8128::runDeviceScan()
         Serial.println("Could not find any I2C devices, check the wiring!");
 
     logMessage("Finished scan for I2C devices");
+}
+
+bool SensorCjmcu8128::isTempValid(float temperature)
+{
+    return (temperature > -30.0F && temperature < 57.0F);
 }

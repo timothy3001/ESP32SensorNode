@@ -2,21 +2,49 @@
     var inputSensorSdaPin;
     var inputSensorSclPin;
     var inputActivateScanDevices;
+    var inputCcs811Baseline;
+    var inputCcs811Co2Subaddress;
+    var inputCcs811TvocSubaddress;
+    var inputHdc1080TempSubaddress;
+    var inputHdc1080HumiditySubaddress;
+    var inputHdcBmp280TempSubaddress;
+    var inputHdcBmp280PressureSubaddress;
   
     function sensorOnload() {
       inputSensorSdaPin = document.getElementById('inputSensorSdaPin');
       inputSensorSclPin = document.getElementById('inputSensorSclPin');
       inputActivateScanDevices = document.getElementById('inputActivateScanDevices');
+      inputCcs811Baseline = document.getElementById('inputCcs811Baseline');
+      inputCcs811Co2Subaddress = document.getElementById('inputCcs811Co2Subaddress');
+      inputCcs811TvocSubaddress = document.getElementById('inputCcs811TvocSubaddress');
+      inputHdc1080TempSubaddress = document.getElementById('inputHdc1080TempSubaddress');
+      inputHdc1080HumiditySubaddress = document.getElementById('inputHdc1080HumiditySubaddress');
+      inputHdcBmp280TempSubaddress = document.getElementById('inputHdcBmp280TempSubaddress');
+      inputHdcBmp280PressureSubaddress = document.getElementById('inputHdcBmp280PressureSubaddress');
     }
   
     function displayCurrentSensorSettings(settings) {
       inputSensorSdaPin.value = settings['sdaPin'];
       inputSensorSclPin.value = settings['sclPin'];
       inputActivateScanDevices.checked = settings['scanDevs'];
-    
+      inputCcs811Baseline.value = settings['ccsBase'];
+      inputCcs811Co2Subaddress.value = settings['ccsCo2'];;
+      inputCcs811TvocSubaddress.value = settings['ccsTvoc'];;
+      inputHdc1080TempSubaddress.value = settings['hdcTemp'];;
+      inputHdc1080HumiditySubaddress.value = settings['hdcHum'];;
+      inputHdcBmp280TempSubaddress.value = settings['bmpTemp'];;
+      inputHdcBmp280PressureSubaddress.value = settings['bmpPres'];;
+
       inputSensorSdaPin.disabled = false;
       inputSensorSclPin.disabled = false;
       inputActivateScanDevices.disabled = false;
+      inputCcs811Baseline.disabled = false;
+      inputCcs811Co2Subaddress.disabled = false;
+      inputCcs811TvocSubaddress.disabled = false;
+      inputHdc1080TempSubaddress.disabled = false;
+      inputHdc1080HumiditySubaddress.disabled = false;
+      inputHdcBmp280TempSubaddress.disabled = false;
+      inputHdcBmp280PressureSubaddress.disabled = false;
     }
   
     function getSensorSettings() {
@@ -34,7 +62,14 @@
       var sensorSettingsObj = {
         'sdaPin': parseInt(inputSensorSdaPin.value),
         'sclPin': parseInt(inputSensorSclPin.value),
-        'scanDevs': inputActivateScanDevices.checked
+        'scanDevs': inputActivateScanDevices.checked,
+        'ccsBase': inputCcs811Baseline.value,
+        'ccsCo2': inputCcs811Co2Subaddress.value,
+        'ccsTvoc': inputCcs811TvocSubaddress.value,
+        'hdcTemp': inputHdc1080TempSubaddress.value,
+        'hdcHum': inputHdc1080HumiditySubaddress.value,
+        'bmpTemp': inputHdcBmp280TempSubaddress.value,
+        'bmpPres': inputHdcBmp280PressureSubaddress.value,
       };
   
       return sensorSettingsObj;
@@ -53,4 +88,32 @@
   <div class="setting-container">
     <label>Scan devices at startup: </label>
     <input type="checkbox" id="inputActivateScanDevices" disabled />
+  </div>
+  <div class="setting-container">
+    <label>CCS811 Baseline: </label>
+    <input type="number" class="number-input" id="inputCcs811Baseline" disabled />
+  </div>
+  <div class="setting-container">
+    <label>CCS811 CO2 subaddress: </label>
+    <input type="text" class="text-input" id="inputCcs811Co2Subaddress" disabled />
+  </div>
+  <div class="setting-container">
+    <label>CCS811 TVOC subaddress: </label>
+    <input type="text" class="text-input" id="inputCcs811TvocSubaddress" disabled />
+  </div>
+  <div class="setting-container">
+    <label>HDC1080 Temperature subaddress: </label>
+    <input type="text" class="text-input" id="inputHdc1080TempSubaddress" disabled />
+  </div>
+  <div class="setting-container">
+    <label>HDC1080 Humidity subaddress: </label>
+    <input type="text" class="text-input" id="inputHdc1080HumiditySubaddress" disabled />
+  </div>
+  <div class="setting-container">
+    <label>BMP280 Temperature subaddress: </label>
+    <input type="text" class="text-input" id="inputHdcBmp280TempSubaddress" disabled />
+  </div>
+  <div class="setting-container">
+    <label>BMP280 Pressure subaddress: </label>
+    <input type="text" class="text-input" id="inputHdcBmp280PressureSubaddress" disabled />
   </div>
