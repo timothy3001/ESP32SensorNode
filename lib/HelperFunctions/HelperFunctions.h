@@ -8,8 +8,8 @@ class HelperFunctions
 {
     public:
         static void sendPutRequest(String address, String value);
-        static void stripLastSlash(String value);
-        static void stripFirstSlash(String value);
+        static String stripLastSlash(String value);
+        static String stripFirstSlash(String value);
 };
 
 #endif

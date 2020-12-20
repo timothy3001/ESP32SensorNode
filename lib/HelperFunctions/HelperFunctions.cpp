@@ -22,24 +22,28 @@ void HelperFunctions::sendPutRequest(String address, String value)
     }
 }
 
-void HelperFunctions::stripLastSlash(String value)
+String HelperFunctions::stripLastSlash(String value)
 {
     if (value.length() == 0)
-        return;
+        return value;
 
     while(value.charAt(value.length() -1) == '/')
     {
         value.remove(value.length() -1, 1);
     }
+
+    return value;
 }
 
-void HelperFunctions::stripFirstSlash(String value)
+String HelperFunctions::stripFirstSlash(String value)
 {
     if (value.length() == 0)
-        return;
+        return value;
 
     while(value.charAt(0) == '/')
     {
         value.remove(0, 1);
     }
+    
+    return value;
 }

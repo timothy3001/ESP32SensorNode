@@ -117,7 +117,30 @@ void SensorCjmcu8128::updateReadingHdc1080()
 
 void SensorCjmcu8128::executeReporting(String baseAddress)
 {
-    logMessage("executingReporting() not implemented yet!");
+    if (!this->validSettings)
+    {
+        logMessage("Settings are not valid, cannot execute reporting!");
+        return;
+    }
+
+    if (this->settingCcs811Co2SubAddress.length() > 0 && this->ccs811Co2 >= 0)
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingCcs811Co2SubAddress,
+        String(this->ccs811Co2));
+    if (this->settingCcs811TvocSubAddress.length() > 0 && this->ccs811Tvoc >= 0)
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingCcs811TvocSubAddress,
+        String(this->ccs811Tvoc));
+    if (this->settingHdc1080TempSubAddress.length() > 0 && this->isTempValid(this->hdc1080Temperature))
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingHdc1080TempSubAddress,
+        String(this->hdc1080Temperature));
+    if (this->settingHdc1080HumiditySubAddress.length() > 0 && this->hdc1080Humidity >= 0.0f)
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingHdc1080HumiditySubAddress,
+        String(this->hdc1080Humidity));
+    if (this->settingBmp280TempSubAddress.length() > 0 && this->isTempValid(this->bmp280Temperature))
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingBmp280TempSubAddress,
+        String(this->bmp280Temperature));
+    if (this->settingBmp280PressureSubAddress.length() > 0 && this->bmp280Pressure >= 0.0f)
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingBmp280PressureSubAddress,
+        String(this->bmp280Pressure));
 }
 
 void SensorCjmcu8128::loop()
@@ -234,37 +257,37 @@ void SensorCjmcu8128::updateSettings(String settings)
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingCcs811Co2SubAddress = value;
         }
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingCcs811TvocSubAddress = value;
         }
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingHdc1080TempSubAddress = value;
         }
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingHdc1080HumiditySubAddress = value;
         }
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingBmp280TempSubAddress = value;
         }
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingBmp280PressureSubAddress = value;
         }
 

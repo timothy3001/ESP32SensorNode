@@ -54,7 +54,7 @@ void SensorThermometer::updateSettings(String settings)
         if (doc.containsKey(SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS))
         {
             String value = doc[SENSOR_THERMOMETER_PREF_REPORTING_ADDRESS].as<String>();
-            HelperFunctions::stripFirstSlash(value);
+            value = HelperFunctions::stripFirstSlash(value);
             this->settingAddressValue = value;
         }        
         

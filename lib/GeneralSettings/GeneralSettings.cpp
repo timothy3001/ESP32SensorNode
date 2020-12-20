@@ -23,9 +23,8 @@ void GeneralSettings::save()
 {
     Preferences prefs;
     prefs.begin(GENERAL_PREFS_NAME, false);
-
-    HelperFunctions::stripLastSlash(this->baseAddress);
-    HelperFunctions::stripFirstSlash(this->reportingBatteryAddress);
+    this->baseAddress = HelperFunctions::stripLastSlash(this->baseAddress);
+    this->reportingBatteryAddress = HelperFunctions::stripFirstSlash(this->reportingBatteryAddress);
 
     prefs.putString(GENERAL_PREF_SENSOR_NAME, this->sensorName);
     prefs.putBool(GENERAL_PREF_ACTIVATE_REPORTING, this->reportingActive);
