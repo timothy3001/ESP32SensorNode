@@ -13,6 +13,7 @@
 #include <SparkFunBME280.h>
 #include <ClosedCube_HDC1080.h>
 #include <HelperFunctions.h>
+#include <math.h>
 
 /**
  * 

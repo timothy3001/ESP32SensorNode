@@ -82,10 +82,13 @@ void WebServerSensor::handleUpdateSettings(AsyncWebServerRequest *request, uint8
     }
     else
     {
-        DynamicJsonDocument doc(len);
-        if (deserializeJson(doc, data) != DeserializationError::Ok)
+        DynamicJsonDocument doc(2048);
+        DeserializationError deserializationResult = deserializeJson(doc, data);
+        if (deserializationResult != DeserializationError::Ok)
         {
-            request->send(400, "text/plain", "Could not parse JSON!");
+            request->send(400, "text/plain", "Could not parse JSON! Deserialization code: " + String((int)deserializationResult.code()));
+            Serial.println(ESP.getFreeHeap());
+            return;
         }
         else
         {

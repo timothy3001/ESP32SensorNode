@@ -37,6 +37,7 @@ void SensorCjmcu8128::begin()
         // Setting up HDC1080
         this->hdc1080 = new ClosedCube_HDC1080();
         this->hdc1080->begin(HDC1080_ADDRESS);
+        this->hdc1080Ready = true;
 
         this->updateReadings();
     }
@@ -78,6 +79,8 @@ void SensorCjmcu8128::updateReadingCcs811()
                     String(" TVOC: ") + String(this->ccs811Tvoc) + 
                     String(" CO2: " + String(this->ccs811Co2))
                 );
+
+                break;
             }
         }
     }    
@@ -90,8 +93,8 @@ void SensorCjmcu8128::updateReadingCcs811()
 
 void SensorCjmcu8128::updateReadingBmp280()
 {
-    this->bmp280Temperature = this->bmp280->readTempC();
-    this->bmp280Pressure = this->bmp280->readFloatPressure();
+    this->bmp280Temperature = round((float)this->bmp280->readTempC() * 10) / 10;
+    this->bmp280Pressure = round(((float)this->bmp280->readFloatPressure() / 100) * 10) / 10;
 
     logMessage(
         String("Reading BMP280 -") +
@@ -102,8 +105,8 @@ void SensorCjmcu8128::updateReadingBmp280()
 
 void SensorCjmcu8128::updateReadingHdc1080()
 {
-    this->hdc1080Temperature = (float)this->hdc1080->readTemperature();
-    this->hdc1080Humidity = (float)this->hdc1080->readHumidity();
+    this->hdc1080Temperature = round((float)this->hdc1080->readTemperature() * 10) / 10;
+    this->hdc1080Humidity = round((float)this->hdc1080->readHumidity() * 10) / 10;
 
     logMessage(
         String("Reading HDC1080 -") +
@@ -121,7 +124,7 @@ void SensorCjmcu8128::loop()
 {
     unsigned long now = millis();
 
-    if (lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || lastUpdate > now && this->validSettings)
+    if ((lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || lastUpdate > now) && this->validSettings)
     {
         this->updateReadings();
         
@@ -131,6 +134,8 @@ void SensorCjmcu8128::loop()
             logMessage(String("Set CCS811 baseline to: ") + String(this->settingCcs811Baseline));
             this->saveSettings();
         }
+
+        this->lastUpdate = millis();
     }
 }
 
@@ -158,17 +163,17 @@ String SensorCjmcu8128::getValues()
     else
     {
         if (this->ccs811Co2 >= 0)
-            doc['co2'] = this->ccs811Co2;
+            doc["co2"] = this->ccs811Co2;
         if (this->ccs811Tvoc >= 0)
-            doc['tvoc'] = this->ccs811Tvoc;
+            doc["tvoc"] = this->ccs811Tvoc;
         if (this->isTempValid(this->hdc1080Temperature))
-            doc['tempHdc1080'] = this->hdc1080Temperature;
+            doc["tempHdc1080"] = this->hdc1080Temperature;
         if (this->hdc1080Humidity >= 0.0f)
-            doc['humidity'] = this->hdc1080Humidity;
+            doc["humidity"] = this->hdc1080Humidity;
         if (this->isTempValid(this->bmp280Temperature))
-            doc['tempBmp280'] = this->bmp280Temperature;
+            doc["tempBmp280"] = this->bmp280Temperature;
         if (this->bmp280Pressure >= 0.0f)
-            doc['pressure'] = this->bmp280Pressure;
+            doc["pressure"] = this->bmp280Pressure;
     }
     
     
@@ -209,7 +214,7 @@ void SensorCjmcu8128::resetSettings()
 
 void SensorCjmcu8128::updateSettings(String settings)
 {
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(2048);
     DeserializationError deserializeResult = deserializeJson(doc, settings);
 
     if(deserializeResult != DeserializationError::Ok)
