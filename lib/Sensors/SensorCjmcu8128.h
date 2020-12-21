@@ -73,8 +73,6 @@ class SensorCjmcu8128 : public SensorBase
         void updateReadingBmp280();
         void updateReadingHdc1080();
         bool isTempValid(float temp);
-        bool isHumidityValid(float humidity);
-        bool isPressureValid(float pressure);
 
         int settingSdaPin;
         int settingSclPin;

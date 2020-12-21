@@ -31,7 +31,7 @@ void SensorCjmcu8128::begin()
         this->bmp280Ready = this->bmp280->beginI2C(Wire);
         if(!bmp280Ready)
         {
-            logMessage("ERROR - could setup BMP280, please check wiring and address!");
+            logMessage("ERROR - could not setup BMP280, please check wiring and address!");
         }
 
         // Setting up HDC1080
@@ -45,12 +45,15 @@ void SensorCjmcu8128::begin()
 
 void SensorCjmcu8128::updateReadings()
 {
-    if(this->ccs811Ready)
-        this->updateReadingCcs811();
-    if(this->hdc1080Ready)
-        this->updateReadingHdc1080();
     if (this->bmp280Ready)
         this->updateReadingBmp280();
+    if(this->hdc1080Ready)
+        this->updateReadingHdc1080();
+    // Make sure that HDC1080 reading was done before running reading of CCS811
+    // so that the environmental data for measuring TVOC is set correctly.
+    if(this->ccs811Ready)  
+        this->updateReadingCcs811();    
+    
 }
 
 void SensorCjmcu8128::updateReadingCcs811() 
@@ -61,6 +64,13 @@ void SensorCjmcu8128::updateReadingCcs811()
     {
         delay(20);
 
+        if (this->hdc1080Ready && 
+            this->isTempValid(this->hdc1080Temperature) &&
+            this->hdc1080Humidity >= 0.0f)
+        {
+            this->ccs811->setEnvironmentalData(this->hdc1080Humidity, this->hdc1080Temperature);
+        }
+        
         if (this->ccs811->dataAvailable())
         {
             this->ccs811->readAlgorithmResults();

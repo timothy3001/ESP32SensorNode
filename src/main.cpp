@@ -40,11 +40,6 @@ void setup()
     analogSetAttenuation(ADC_11db);
     analogReadResolution(11);
 
-    // Test reading battery
-    delay(10);
-    Serial.println("RAW:");
-    Serial.println(String(analogRead(PIN_BATTERY_MONITORING)));
-
     millisStart = millis();
 
     // Read general prefs
