@@ -60,16 +60,16 @@ void SensorCjmcu8128::updateReadingCcs811()
 {
     unsigned long firstTryReading = millis();
 
-    while(firstTryReading + 10000 > millis())
+    if (this->hdc1080Ready && 
+        this->isTempValid(this->hdc1080Temperature) &&
+        this->hdc1080Humidity >= 0.0f)
     {
-        delay(20);
+        this->ccs811->setEnvironmentalData(this->hdc1080Humidity, this->hdc1080Temperature);
+    }
 
-        if (this->hdc1080Ready && 
-            this->isTempValid(this->hdc1080Temperature) &&
-            this->hdc1080Humidity >= 0.0f)
-        {
-            this->ccs811->setEnvironmentalData(this->hdc1080Humidity, this->hdc1080Temperature);
-        }
+    while(firstTryReading + 11000 > millis())
+    {
+        delay(100);
         
         if (this->ccs811->dataAvailable())
         {
@@ -95,10 +95,18 @@ void SensorCjmcu8128::updateReadingCcs811()
         }
     }    
 
-    if (firstTryReading + 10000 < millis())
+    if (firstTryReading + 11000 < millis())
     {
         logMessage("ERROR - Could not read data from CCS811 sensor!");
     }
+    else
+    {
+        // Set drive mode to 2. This is slowing down readings to every 10
+        // seconds. This is so that the board does not heat up due to heating
+        // element.
+        this->ccs811->setDriveMode(2);
+    }
+    
 }
 
 void SensorCjmcu8128::updateReadingBmp280()
