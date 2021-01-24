@@ -3,6 +3,7 @@
     var tvocDisplay;
     var tempHdcDisplay;
     var tempBmpDisplay;
+    var tempDs18b20Display;
     var humidityDisplay;
     var pressureDisplay;
 
@@ -13,12 +14,13 @@
         tempBmpDisplay = document.getElementById('tempBmpDisplay');
         humidityDisplay = document.getElementById('humidityDisplay');
         pressureDisplay = document.getElementById('pressureDisplay');
+        tempDs18b20Display = document.getElementById('tempDs18b20Display');
     }
 
     function displaySensorValues(values) {
         json = JSON.parse(values);
 
-        if(json['error']) {
+        if (json['error']) {
             console.log(json['error']);
             vocDisplay.textContent = 'Current VOC level: ' + 'NaN';
         } else {
@@ -30,6 +32,8 @@
                 tempBmpDisplay.textContent = 'Current Temperature (BMP280): ' + json['tempBmp280'] + ' \u00B0 C';
             if (json['tempHdc1080'] != null)
                 tempHdcDisplay.textContent = 'Current Temperature (HDC1080): ' + json['tempHdc1080'] + ' \u00B0 C';     
+            if (json['tempDs18b20'] != null)
+                tempDs18b20Display.textContent = 'Current Temperature (DS18B20): ' + json['tempDs18b20'] + ' \u00B0 C';
             if (json['humidity'] != null)
                 humidityDisplay.textContent = 'Current Humidity: ' + json['humidity'] + ' %';
             if (json['pressure'] != null)
@@ -44,3 +48,4 @@
 <h2 id="tempBmpDisplay"></h2>
 <h2 id="humidityDisplay"></h2>
 <h2 id="pressureDisplay"></h2>
+<h2 id="tempDs18b20Display"></h2>

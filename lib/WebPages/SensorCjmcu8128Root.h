@@ -6,6 +6,7 @@ const char sensorCjmcu8128Root[] PROGMEM = R"=====(
     var tvocDisplay;
     var tempHdcDisplay;
     var tempBmpDisplay;
+    var tempDs18b20Display;
     var humidityDisplay;
     var pressureDisplay;
 
@@ -16,26 +17,29 @@ const char sensorCjmcu8128Root[] PROGMEM = R"=====(
         tempBmpDisplay = document.getElementById('tempBmpDisplay');
         humidityDisplay = document.getElementById('humidityDisplay');
         pressureDisplay = document.getElementById('pressureDisplay');
+        tempDs18b20Display = document.getElementById('tempDs18b20Display');
     }
 
     function displaySensorValues(values) {
         json = JSON.parse(values);
 
-        if(json['error']) {
+        if (json['error']) {
             console.log(json['error']);
             vocDisplay.textContent = 'Current VOC level: ' + 'NaN';
         } else {
-            if (json['co2'])
+            if (json['co2'] != null)
                 co2Display.textContent = 'Current CO2 level: ' + json['co2'] + ' ppm';
-            if (json['tvoc'])
+            if (json['tvoc'] != null)
                 tvocDisplay.textContent = 'Current TVOC level: ' + json['tvoc'] + ' ppb';
-            if (json['tempBmp280'])
+            if (json['tempBmp280'] != null)
                 tempBmpDisplay.textContent = 'Current Temperature (BMP280): ' + json['tempBmp280'] + ' \u00B0 C';
-            if (json['tempHdc1080'])
+            if (json['tempHdc1080'] != null)
                 tempHdcDisplay.textContent = 'Current Temperature (HDC1080): ' + json['tempHdc1080'] + ' \u00B0 C';     
-            if (json['humidity'])
+            if (json['tempDs18b20'] != null)
+                tempDs18b20Display.textContent = 'Current Temperature (DS18B20): ' + json['tempDs18b20'] + ' \u00B0 C';
+            if (json['humidity'] != null)
                 humidityDisplay.textContent = 'Current Humidity: ' + json['humidity'] + ' %';
-            if (json['pressure'])
+            if (json['pressure'] != null)
                 pressureDisplay.textContent = 'Current Pressure: ' + json['pressure'] + ' hPa';
         }        
     }
@@ -47,4 +51,5 @@ const char sensorCjmcu8128Root[] PROGMEM = R"=====(
 <h2 id="tempBmpDisplay"></h2>
 <h2 id="humidityDisplay"></h2>
 <h2 id="pressureDisplay"></h2>
+<h2 id="tempDs18b20Display"></h2>
 )=====";
