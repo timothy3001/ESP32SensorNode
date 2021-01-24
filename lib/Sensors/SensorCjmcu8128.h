@@ -7,6 +7,8 @@
 #include <Constants.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include <SensorCjmcu8128Root.h>
 #include <SensorCjmcu8128Settings.h>
 #include <SparkFunCCS811.h>
@@ -47,7 +49,7 @@ class SensorCjmcu8128 : public SensorBase
     
     private:
         const int CONTINOUS_UPDATE_INTERVAL = 10 * 1000; // 10 seconds
-        const unsigned long CCS811_BURN_IN_TIME =  1000 * 60 * 20; // 20 minutes
+        const unsigned long CCS811_BURN_IN_TIME =  1000 * 60 * 30; // 30 minutes
 
         const char* SENSOR_CJMCU8128_PREF_SDA_PIN = "sdaPin";
         const char* SENSOR_CJMCU8128_PREF_SCL_PIN = "sclPin";
@@ -59,6 +61,8 @@ class SensorCjmcu8128 : public SensorBase
         const char* SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS = "hdcHum";
         const char* SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS = "bmpTemp";
         const char* SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS = "bmpPres";
+        const char* SENSOR_DS18B20_PREF_TEMP_SUBADDRESS = "dsTemp";
+        const char* SENSOR_DS18B20_PREF_DATA_PIN = "dsPin";
 
         const int CCS811_ADDRESS = 0x5A;
         const int HDC1080_ADDRESS = 0x40;
@@ -72,10 +76,12 @@ class SensorCjmcu8128 : public SensorBase
         void updateReadingCcs811();
         void updateReadingBmp280();
         void updateReadingHdc1080();
+        void updateReadingDs18b20();
         bool isTempValid(float temp);
 
         int settingSdaPin;
         int settingSclPin;
+        int settingDs18b20Pin;
         bool settingScanDevices;
         int settingCcs811Baseline;
         String settingCcs811Co2SubAddress;
@@ -84,6 +90,7 @@ class SensorCjmcu8128 : public SensorBase
         String settingHdc1080HumiditySubAddress;
         String settingBmp280TempSubAddress;
         String settingBmp280PressureSubAddress;
+        String settingDs18b20TempSubAddress;
 
         bool validSettings = false;
         CCS811 *ccs811;
@@ -99,6 +106,10 @@ class SensorCjmcu8128 : public SensorBase
         bool bmp280Ready = false;
         float bmp280Temperature = -127.0f;
         float bmp280Pressure = -1.0f;
+        OneWire *oneWireDs18b20;
+        DallasTemperature *tempSensorDs18b20;
+        bool ds18b20Ready = false;
+        float ds18b20Temperature = -127.0f;
 
 };
 

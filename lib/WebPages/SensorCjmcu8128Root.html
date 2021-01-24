@@ -22,17 +22,17 @@
             console.log(json['error']);
             vocDisplay.textContent = 'Current VOC level: ' + 'NaN';
         } else {
-            if (json['co2'])
+            if (json['co2'] != null)
                 co2Display.textContent = 'Current CO2 level: ' + json['co2'] + ' ppm';
-            if (json['tvoc'])
+            if (json['tvoc'] != null)
                 tvocDisplay.textContent = 'Current TVOC level: ' + json['tvoc'] + ' ppb';
-            if (json['tempBmp280'])
+            if (json['tempBmp280'] != null)
                 tempBmpDisplay.textContent = 'Current Temperature (BMP280): ' + json['tempBmp280'] + ' \u00B0 C';
-            if (json['tempHdc1080'])
+            if (json['tempHdc1080'] != null)
                 tempHdcDisplay.textContent = 'Current Temperature (HDC1080): ' + json['tempHdc1080'] + ' \u00B0 C';     
-            if (json['humidity'])
+            if (json['humidity'] != null)
                 humidityDisplay.textContent = 'Current Humidity: ' + json['humidity'] + ' %';
-            if (json['pressure'])
+            if (json['pressure'] != null)
                 pressureDisplay.textContent = 'Current Pressure: ' + json['pressure'] + ' hPa';
         }        
     }

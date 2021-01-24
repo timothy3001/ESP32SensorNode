@@ -39,6 +39,16 @@ void SensorCjmcu8128::begin()
         this->hdc1080->begin(HDC1080_ADDRESS);
         this->hdc1080Ready = true;
 
+        // Optional, setting up if pin is set to an actual value
+        if (this->settingDs18b20Pin >= 0)
+        {
+            this->oneWireDs18b20 = new OneWire(this->settingDs18b20Pin);
+            this->tempSensorDs18b20 = new DallasTemperature(this->oneWireDs18b20);
+            this->tempSensorDs18b20->begin();
+
+            this->ds18b20Ready = true;
+        }
+
         this->updateReadings();
     }
 }
@@ -53,7 +63,9 @@ void SensorCjmcu8128::updateReadings()
     // so that the environmental data for measuring TVOC is set correctly.
     if(this->ccs811Ready)  
         this->updateReadingCcs811();    
-    
+    // Only optional
+    if (this->ds18b20Ready) 
+        this->updateReadingDs18b20();
 }
 
 void SensorCjmcu8128::updateReadingCcs811() 
@@ -133,6 +145,34 @@ void SensorCjmcu8128::updateReadingHdc1080()
     );
 }
 
+void SensorCjmcu8128::updateReadingDs18b20()
+{
+    int tries = 0;
+    bool successful = false;
+    while (tries < 5 && !successful)
+    {
+        this->tempSensorDs18b20->requestTemperatures();
+        float temp = this->tempSensorDs18b20->getTempCByIndex(0);
+
+        if (!this->isTempValid(temp))
+        {
+            this->logMessage(
+                String("Could not read proper temperature on pin ") + 
+                String(this->settingDs18b20Pin) + 
+                String("! Please check the wiring.")
+            );
+            delay(100);
+        }
+        else
+        {
+            this->ds18b20Temperature = temp;
+            logMessage(String("Reading DS18B20 - temperature: ") + String(this->ds18b20Temperature) + String("°C"));
+            successful = true;
+        }
+        tries++;
+    }
+}
+
 void SensorCjmcu8128::executeReporting(String baseAddress)
 {
     if (!this->validSettings)
@@ -159,6 +199,9 @@ void SensorCjmcu8128::executeReporting(String baseAddress)
     if (this->settingBmp280PressureSubAddress.length() > 0 && this->bmp280Pressure >= 0.0f)
         HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingBmp280PressureSubAddress,
         String(this->bmp280Pressure));
+    if (this->settingDs18b20TempSubAddress.length() > 0 && this->isTempValid(this->ds18b20Temperature))
+        HelperFunctions::sendPutRequest(baseAddress + String("/") + this->settingDs18b20TempSubAddress,
+        String(this->ds18b20Temperature));
 }
 
 void SensorCjmcu8128::loop()
@@ -215,6 +258,8 @@ String SensorCjmcu8128::getValues()
             doc["tempBmp280"] = this->bmp280Temperature;
         if (this->bmp280Pressure >= 0.0f)
             doc["pressure"] = this->bmp280Pressure;
+        if (this->isTempValid(this->ds18b20Temperature))
+            doc["tempDs18b20"] = this->ds18b20Temperature;
     }
     
     
@@ -238,6 +283,8 @@ String SensorCjmcu8128::getSettings()
     doc[SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS] = settingHdc1080TempSubAddress;
     doc[SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS] = settingBmp280TempSubAddress;
     doc[SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS] = settingBmp280PressureSubAddress;
+    doc[SENSOR_DS18B20_PREF_TEMP_SUBADDRESS] = settingDs18b20TempSubAddress;
+    doc[SENSOR_DS18B20_PREF_DATA_PIN] = settingDs18b20Pin;
 
     String result;
     serializeJson(doc, result);
@@ -272,6 +319,8 @@ void SensorCjmcu8128::updateSettings(String settings)
             this->settingScanDevices = doc[SENSOR_CJMCU8128_PREF_SCAN_DEVICES].as<bool>();
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_BASELINE))
             this->settingCcs811Baseline = doc[SENSOR_CJMCU8128_PREF_CCS811_BASELINE].as<int>();
+        if (doc.containsKey(SENSOR_DS18B20_PREF_DATA_PIN))
+            this->settingDs18b20Pin = doc[SENSOR_DS18B20_PREF_DATA_PIN].as<int>();
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS].as<String>();
@@ -308,6 +357,12 @@ void SensorCjmcu8128::updateSettings(String settings)
             value = HelperFunctions::stripFirstSlash(value);
             this->settingBmp280PressureSubAddress = value;
         }
+        if (doc.containsKey(SENSOR_DS18B20_PREF_TEMP_SUBADDRESS))
+        {
+            String value = doc[SENSOR_DS18B20_PREF_TEMP_SUBADDRESS].as<String>();
+            value = HelperFunctions::stripFirstSlash(value);
+            this->settingDs18b20TempSubAddress = value;
+        }
 
         this->saveSettings();
     }
@@ -328,6 +383,8 @@ void SensorCjmcu8128::saveSettings()
     prefs.putString(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS, this->settingHdc1080HumiditySubAddress);
     prefs.putString(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS, this->settingBmp280TempSubAddress);
     prefs.putString(SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS, this->settingBmp280PressureSubAddress);
+    prefs.putInt(SENSOR_DS18B20_PREF_DATA_PIN, this->settingDs18b20Pin);
+    prefs.putString(SENSOR_DS18B20_PREF_TEMP_SUBADDRESS, this->settingDs18b20TempSubAddress);
 
     prefs.end();
 }
@@ -352,6 +409,8 @@ bool SensorCjmcu8128::readSettings()
     this->settingHdc1080HumiditySubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS, String(""));
     this->settingBmp280TempSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS, String(""));
     this->settingBmp280PressureSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_BMP280_PRESSURE_SUBADDRESS, String(""));
+    this->settingDs18b20TempSubAddress = prefs.getString(SENSOR_DS18B20_PREF_TEMP_SUBADDRESS, String(""));
+    this->settingDs18b20Pin = prefs.getInt(SENSOR_DS18B20_PREF_DATA_PIN, -1);
 
     prefs.end();
 
