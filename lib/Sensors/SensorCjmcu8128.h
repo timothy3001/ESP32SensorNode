@@ -49,7 +49,7 @@ class SensorCjmcu8128 : public SensorBase
     
     private:
         const int CONTINOUS_UPDATE_INTERVAL = 10 * 1000; // 10 seconds
-        const unsigned long CCS811_BURN_IN_TIME =  1000 * 60 * 30; // 30 minutes
+        const unsigned long CCS811_BURN_IN_TIME =  1000 * 60 * 60; // 1 hour
         const int TEMPERATURE_CORRECTION = -3.0f; // -3°C because of heating of the plate
 
         const char* SENSOR_CJMCU8128_PREF_SDA_PIN = "sdaPin";
