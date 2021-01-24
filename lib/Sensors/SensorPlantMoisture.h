@@ -16,6 +16,16 @@ class SensorCjmcu8128 : public SensorBase
         void updateSettings(String settings);
     
     private:
+        const char* SENSOR_MOISTURE_PLANT_PREF_DATA_PIN = "dataPin";
+        const char* SENSOR_MOISTURE_PLANT_PREF_REPORTING_ADDRESS = "moistAdd";
+
+        int settingDataPinSensor;
+        String settingAddressValue;
+
+        float currentMoisture = -1.0f;
+        bool validSettings = false;
+        unsigned long lastUpdate = 0;
+
         void logMessage(String msg);
 
 };
