@@ -111,19 +111,11 @@ void SensorCjmcu8128::updateReadingCcs811()
     {
         logMessage("ERROR - Could not read data from CCS811 sensor!");
     }
-    else
-    {
-        // Set drive mode to 2. This is slowing down readings to every 10
-        // seconds. This is so that the board does not heat up due to heating
-        // element.
-        this->ccs811->setDriveMode(2);
-    }
-    
 }
 
 void SensorCjmcu8128::updateReadingBmp280()
 {
-    this->bmp280Temperature = round((float)this->bmp280->readTempC() * 10) / 10;
+    this->bmp280Temperature = round((float)this->bmp280->readTempC() * 10) / 10 + TEMPERATURE_CORRECTION;
     this->bmp280Pressure = round(((float)this->bmp280->readFloatPressure() / 100) * 10) / 10;
 
     logMessage(
@@ -135,7 +127,7 @@ void SensorCjmcu8128::updateReadingBmp280()
 
 void SensorCjmcu8128::updateReadingHdc1080()
 {
-    this->hdc1080Temperature = round((float)this->hdc1080->readTemperature() * 10) / 10;
+    this->hdc1080Temperature = round((float)this->hdc1080->readTemperature() * 10) / 10 + TEMPERATURE_CORRECTION;
     this->hdc1080Humidity = round((float)this->hdc1080->readHumidity() * 10) / 10;
 
     logMessage(
