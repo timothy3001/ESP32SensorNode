@@ -157,7 +157,7 @@ void SensorCjmcu8128::updateReadingDs18b20()
         }
         else
         {
-            this->ds18b20Temperature = temp;
+            this->ds18b20Temperature = round((float)temp * 10) / 10;
             logMessage(String("Reading DS18B20 - temperature: ") + String(this->ds18b20Temperature) + String("°C"));
             successful = true;
         }
