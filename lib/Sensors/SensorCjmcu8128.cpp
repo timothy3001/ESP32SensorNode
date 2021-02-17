@@ -59,21 +59,33 @@ void SensorCjmcu8128::updateReadings()
         this->updateReadingBmp280();
     if(this->hdc1080Ready)
         this->updateReadingHdc1080();
+    // Only optional
+    if (this->ds18b20Ready)
+        this->updateReadingDs18b20();
     // Make sure that HDC1080 reading was done before running reading of CCS811
     // so that the environmental data for measuring TVOC is set correctly.
-    if(this->ccs811Ready)  
-        this->updateReadingCcs811();    
-    // Only optional
-    if (this->ds18b20Ready) 
-        this->updateReadingDs18b20();
+    if(this->ccs811Ready)
+        this->updateReadingCcs811();       
 }
 
 void SensorCjmcu8128::updateReadingCcs811() 
 {
     unsigned long firstTryReading = millis();
 
-    if (this->hdc1080Ready && 
-        this->isTempValid(this->hdc1080Temperature) &&
+    // Getting reference temperature, preferably from DS18B20 sensor
+    float referenceTemperature = -127.0f;
+    if (this->ds18b20Ready &&
+        this->isTempValid(this->ds18b20Temperature))
+    {
+        referenceTemperature = this->ds18b20Temperature;
+    }
+    else if (this->hdc1080Ready && 
+             this->isTempValid(this->hdc1080Temperature))
+    {
+        referenceTemperature = this->hdc1080Temperature;
+    }    
+
+    if (this->isTempValid(referenceTemperature) &&
         this->hdc1080Humidity >= 0.0f)
     {
         this->ccs811->setEnvironmentalData(this->hdc1080Humidity, this->hdc1080Temperature);
@@ -200,7 +212,7 @@ void SensorCjmcu8128::loop()
 {
     unsigned long now = millis();
 
-    if ((lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || lastUpdate > now) && this->validSettings)
+    if ((this->lastUpdate + CONTINOUS_UPDATE_INTERVAL < now || this->lastUpdate > now) && this->validSettings)
     {
         this->updateReadings();
         
@@ -212,6 +224,11 @@ void SensorCjmcu8128::loop()
         }
 
         this->lastUpdate = millis();
+    }
+
+    if (this->lastUpdateBaseline)
+    {
+        
     }
 }
 

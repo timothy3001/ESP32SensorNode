@@ -50,6 +50,7 @@ class SensorCjmcu8128 : public SensorBase
     private:
         const int CONTINOUS_UPDATE_INTERVAL = 10 * 1000; // 10 seconds
         const unsigned long CCS811_BURN_IN_TIME =  1000 * 60 * 60; // 1 hour
+        const int BASELINE_UPDATE_INTERVAL = 24 * 60 * 60  * 1000; // 24 hours
         const int TEMPERATURE_CORRECTION = -3.0f; // -3°C because of heating of the plate
 
         const char* SENSOR_CJMCU8128_PREF_SDA_PIN = "sdaPin";
@@ -58,6 +59,8 @@ class SensorCjmcu8128 : public SensorBase
         const char* SENSOR_CJMCU8128_PREF_CCS811_BASELINE = "ccsBase";
         const char* SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS = "ccsCo2";
         const char* SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS = "ccsTvoc";
+        const char* SENSOR_CJMCU8128_PREF_CCS881_CONSTANTLY_UPDATE_BASELINE = "ccsBaseUp";
+        const char* SENSOR_CJMCU8128_PREF_CCS881_MAX_CO2 = "ccsMaxCo2";
         const char* SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS = "hdcTemp";
         const char* SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS = "hdcHum";
         const char* SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS = "bmpTemp";
@@ -87,6 +90,8 @@ class SensorCjmcu8128 : public SensorBase
         int settingCcs811Baseline;
         String settingCcs811Co2SubAddress;
         String settingCcs811TvocSubAddress;
+        bool settingCcs811ConstUpdateBaseline;
+        int settingCcs811MaxCo2;
         String settingHdc1080TempSubAddress;
         String settingHdc1080HumiditySubAddress;
         String settingBmp280TempSubAddress;
@@ -99,6 +104,7 @@ class SensorCjmcu8128 : public SensorBase
         int ccs811Co2 = -1;
         int ccs811Tvoc = -1;
         unsigned long lastUpdate = 0;
+        unsigned long lastUpdateBaseline = 0;
         ClosedCube_HDC1080 *hdc1080;
         bool hdc1080Ready = false;
         float hdc1080Temperature = -127.0f;
