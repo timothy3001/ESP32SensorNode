@@ -1,13 +1,14 @@
 #include <Arduino.h>
 
 const char sensorCjmcu8128Settings[] PROGMEM = R"=====(
-<script>
+  <script>
     var inputSensorSdaPin;
     var inputSensorSclPin;
     var inputActivateScanDevices;
     var inputCcs811Baseline;
     var inputCcs811Co2Subaddress;
     var inputCcs811TvocSubaddress;
+    var inputCcs811ConstBaselineUpdate;
     var inputHdc1080TempSubaddress;
     var inputHdc1080HumiditySubaddress;
     var inputHdcBmp280TempSubaddress;
@@ -22,6 +23,7 @@ const char sensorCjmcu8128Settings[] PROGMEM = R"=====(
       inputCcs811Baseline = document.getElementById('inputCcs811Baseline');
       inputCcs811Co2Subaddress = document.getElementById('inputCcs811Co2Subaddress');
       inputCcs811TvocSubaddress = document.getElementById('inputCcs811TvocSubaddress');
+      inputCcs811ConstBaselineUpdate = document.getElementById('inputCcs811ConstBaselineUpdate');
       inputHdc1080TempSubaddress = document.getElementById('inputHdc1080TempSubaddress');
       inputHdc1080HumiditySubaddress = document.getElementById('inputHdc1080HumiditySubaddress');
       inputHdcBmp280TempSubaddress = document.getElementById('inputHdcBmp280TempSubaddress');
@@ -37,6 +39,7 @@ const char sensorCjmcu8128Settings[] PROGMEM = R"=====(
       inputCcs811Baseline.value = settings['ccsBase'];
       inputCcs811Co2Subaddress.value = settings['ccsCo2'];
       inputCcs811TvocSubaddress.value = settings['ccsTvoc'];
+      inputCcs811ConstBaselineUpdate.checked = settings['ccsBaseUp']
       inputHdc1080TempSubaddress.value = settings['hdcTemp'];
       inputHdc1080HumiditySubaddress.value = settings['hdcHum'];
       inputHdcBmp280TempSubaddress.value = settings['bmpTemp'];
@@ -50,6 +53,7 @@ const char sensorCjmcu8128Settings[] PROGMEM = R"=====(
       inputCcs811Baseline.disabled = false;
       inputCcs811Co2Subaddress.disabled = false;
       inputCcs811TvocSubaddress.disabled = false;
+      inputCcs811ConstBaselineUpdate.disabled = false;
       inputHdc1080TempSubaddress.disabled = false;
       inputHdc1080HumiditySubaddress.disabled = false;
       inputHdcBmp280TempSubaddress.disabled = false;
@@ -77,6 +81,7 @@ const char sensorCjmcu8128Settings[] PROGMEM = R"=====(
         'ccsBase': inputCcs811Baseline.value,
         'ccsCo2': inputCcs811Co2Subaddress.value,
         'ccsTvoc': inputCcs811TvocSubaddress.value,
+        'ccsBaseUp': inputCcs811ConstBaselineUpdate.checked,
         'hdcTemp': inputHdc1080TempSubaddress.value,
         'hdcHum': inputHdc1080HumiditySubaddress.value,
         'bmpTemp': inputHdcBmp280TempSubaddress.value,
@@ -105,6 +110,10 @@ const char sensorCjmcu8128Settings[] PROGMEM = R"=====(
   <div class="setting-container">
     <label>CCS811 Baseline: </label>
     <input type="number" class="number-input" id="inputCcs811Baseline" disabled />
+  </div>
+  <div class="setting-container">
+    <label>Constantly update CCS811 Baseline: </label>
+    <input type="checkbox" id="inputCcs811ConstBaselineUpdate" disabled />
   </div>
   <div class="setting-container">
     <label>CCS811 CO2 subaddress (optional): </label>

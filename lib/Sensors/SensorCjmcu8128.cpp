@@ -223,12 +223,19 @@ void SensorCjmcu8128::loop()
             this->saveSettings();
         }
 
-        this->lastUpdate = millis();
-    }
+        if  (this->settingCcs811ConstUpdateBaseline &&
+            (this->lastUpdateBaseline + BASELINE_UPDATE_INTERVAL < now || this->lastUpdate > now) &&
+            this->ccs811Ready &&
+            this->ccs811Co2 >= 0) // Just checking if last readings are valid
+        {
+            this->settingCcs811Baseline = this->ccs811->getBaseline();
+            logMessage(String("Set CCS811 baseline to: ") + String(this->settingCcs811Baseline) + String(" (24h update)"));
+            this->saveSettings();
 
-    if (this->lastUpdateBaseline)
-    {
-        
+            this->lastUpdateBaseline = millis();
+        }
+
+        this->lastUpdate = millis();
     }
 }
 
@@ -288,6 +295,7 @@ String SensorCjmcu8128::getSettings()
     doc[SENSOR_CJMCU8128_PREF_CCS811_BASELINE] = settingCcs811Baseline;
     doc[SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS] = settingCcs811Co2SubAddress;
     doc[SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS] = settingCcs811TvocSubAddress;
+    doc[SENSOR_CJMCU8128_PREF_CCS881_CONSTANTLY_UPDATE_BASELINE] = settingCcs811ConstUpdateBaseline;
     doc[SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS] = settingHdc1080HumiditySubAddress;
     doc[SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS] = settingHdc1080TempSubAddress;
     doc[SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS] = settingBmp280TempSubAddress;
@@ -342,6 +350,8 @@ void SensorCjmcu8128::updateSettings(String settings)
             value = HelperFunctions::stripFirstSlash(value);
             this->settingCcs811TvocSubAddress = value;
         }
+        if (doc.containsKey(SENSOR_CJMCU8128_PREF_CCS881_CONSTANTLY_UPDATE_BASELINE))
+            this->settingCcs811ConstUpdateBaseline = doc[SENSOR_CJMCU8128_PREF_CCS881_CONSTANTLY_UPDATE_BASELINE].as<bool>();
         if (doc.containsKey(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS))
         {
             String value = doc[SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS].as<String>();
@@ -388,6 +398,7 @@ void SensorCjmcu8128::saveSettings()
     prefs.putInt(SENSOR_CJMCU8128_PREF_CCS811_BASELINE, this->settingCcs811Baseline);
     prefs.putString(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS, this->settingCcs811Co2SubAddress);
     prefs.putString(SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS, this->settingCcs811TvocSubAddress);
+    prefs.putBool(SENSOR_CJMCU8128_PREF_CCS881_CONSTANTLY_UPDATE_BASELINE, this->settingCcs811ConstUpdateBaseline);
     prefs.putString(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS, this->settingHdc1080TempSubAddress);
     prefs.putString(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS, this->settingHdc1080HumiditySubAddress);
     prefs.putString(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS, this->settingBmp280TempSubAddress);
@@ -414,6 +425,7 @@ bool SensorCjmcu8128::readSettings()
     this->settingCcs811Baseline = prefs.getInt(SENSOR_CJMCU8128_PREF_CCS811_BASELINE, -1);
     this->settingCcs811Co2SubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_CCS811_CO2_SUBADDRESS, String(""));
     this->settingCcs811TvocSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_CCS811_TVOC_SUBADDRESS, String(""));
+    this->settingCcs811ConstUpdateBaseline = prefs.getBool(SENSOR_CJMCU8128_PREF_CCS881_CONSTANTLY_UPDATE_BASELINE, false);
     this->settingHdc1080TempSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_HDC1080_TEMP_SUBADDRESS, String(""));
     this->settingHdc1080HumiditySubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_HDC1080_HUMIDITY_SUBADDRESS, String(""));
     this->settingBmp280TempSubAddress = prefs.getString(SENSOR_CJMCU8128_PREF_BMP280_TEMP_SUBADDRESS, String(""));
