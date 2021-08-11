@@ -1,4 +1,5 @@
 #include <WebServerSensor.h>
+#include <Update.h>
 
 WebServerSensor::WebServerSensor(SensorBase *sensor, GeneralSettings *generalSettings)
 {
@@ -31,6 +32,45 @@ void WebServerSensor::startWebServer(bool onlySettings)
             this->handleUpdateSettings(request, data, len, index, total); 
         });
     webServer->on("/api/resetSettings", HTTP_POST, [&](AsyncWebServerRequest *request) { this->handleResetSettings(request); });
+    webServer->on("/update", HTTP_GET, [&](AsyncWebServerRequest *request) { this->handleGetUpdatePage(request); });
+    webServer->on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
+        bool failed = !Update.hasError();
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", failed ? "OK":"FAIL");
+        response->addHeader("Connection", "close");
+        request->send(response);
+        
+        delay(500);
+        ESP.restart();
+    }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+    {
+        if(!index)
+        {
+            Serial.printf("Update Start: %s\n", filename.c_str());
+            if(!Update.begin())
+            {
+                Update.printError(Serial);
+            }
+        }
+        if(!Update.hasError())
+        {
+            if(Update.write(data, len) != len)
+            {
+                Update.printError(Serial);
+            }
+        }
+        if(final)
+        {
+            if(Update.end(true))
+            {
+                Serial.printf("Update Success: %uB\n", index+len);
+            } 
+            else 
+            {
+                Update.printError(Serial);
+            }
+        }
+    });
+
     webServer->begin();
 }
 
@@ -155,4 +195,9 @@ void WebServerSensor::handleResetSettings(AsyncWebServerRequest *request)
     delay(500);
 
     ESP.restart();
+}
+
+void WebServerSensor::handleGetUpdatePage(AsyncWebServerRequest *request)
+{
+    request->send(200, "text/html", "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>");
 }

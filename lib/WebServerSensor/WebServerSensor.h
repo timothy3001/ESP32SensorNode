@@ -32,6 +32,7 @@ class WebServerSensor
         void handleGetValues(AsyncWebServerRequest *request);
         void updateGeneralSettings(JsonObject generalSettingsObj);
         void handleResetSettings(AsyncWebServerRequest *request);
+        void handleGetUpdatePage(AsyncWebServerRequest *request);
 };
 
 #endif
