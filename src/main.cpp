@@ -7,10 +7,11 @@
 #include <HelperFunctions.h>
 #include <SensorThermometer.h>
 #include <SensorCjmcu8128.h>
+#include <SensorMoisturePlant.h>
 
 // Define what kind of sensor you want to use. 
-// Available options: Thermometer, MoisturePlants
-#define SENSOR_KIND Cjmcu8128
+// Available options: Thermometer, Cjmcu8128, MoisturePlants
+#define SENSOR_KIND MoisturePlant
 
 const int PIN_BATTERY_MONITORING = 35;
 const unsigned int TIMES_HALL_READ = 10;
@@ -139,6 +140,8 @@ void initSensor()
         case Thermometer:
             sensor = new SensorThermometer();
             break;
+        case MoisturePlant:
+            sensor = new SensorMoisturePlant();
         case Cjmcu8128:
             sensor = new SensorCjmcu8128();
             break;
